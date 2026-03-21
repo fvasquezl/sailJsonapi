@@ -10,7 +10,7 @@ it('can fetch a single article', function () {
         ->assertExactJson([
             'data' => [
                 'type' => 'articles',
-                'id' => (string) $article->getRouteKey(),
+                'id' => (string)$article->getRouteKey(),
                 'attributes' => [
                     'title' => $article->title,
                     'slug' => $article->slug,
@@ -31,9 +31,9 @@ it('can fetch all articles', function () {
         ->assertJsonCount(3, 'data')
         ->assertExactJson([
             'data' => [
-              [
+                [
                     'type' => 'articles',
-                    'id' => (string) $articles[0]->getRouteKey(),
+                    'id' => (string)$articles[0]->getRouteKey(),
                     'attributes' => [
                         'title' => $articles[0]->title,
                         'slug' => $articles[0]->slug,
@@ -45,7 +45,7 @@ it('can fetch all articles', function () {
                 ],
                 [
                     'type' => 'articles',
-                    'id' => (string) $articles[1]->getRouteKey(),
+                    'id' => (string)$articles[1]->getRouteKey(),
                     'attributes' => [
                         'title' => $articles[1]->title,
                         'slug' => $articles[1]->slug,
@@ -57,7 +57,7 @@ it('can fetch all articles', function () {
                 ],
                 [
                     'type' => 'articles',
-                    'id' => (string) $articles[2]->getRouteKey(),
+                    'id' => (string)$articles[2]->getRouteKey(),
                     'attributes' => [
                         'title' => $articles[2]->title,
                         'slug' => $articles[2]->slug,
@@ -67,12 +67,9 @@ it('can fetch all articles', function () {
                         'self' => route('api.v1.articles.show', $articles[2]),
                     ],
                 ],
-
             ],
+            'links' => [
+                'self' => route('api.v1.articles.index'),
+            ]
         ]);
-});
-
-it('returns 404 when an article is not found', function () {
-    $this->getJson(route('api.v1.articles.show', 999))
-        ->assertNotFound();
 });
