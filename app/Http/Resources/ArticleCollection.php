@@ -18,7 +18,11 @@ class ArticleCollection extends ResourceCollection
             'data' => ArticleResource::collection($this->collection),
             'links' => [
                 'self' => route('api.v1.articles.index'),
+            ],
+            'meta' => [
+                'articles_count' => $this->collection->count(),
             ]
+
         ];
     }
 }

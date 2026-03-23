@@ -19,6 +19,8 @@
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.9",
         "laravel-shift/blueprint": "^2.13",
+        "laravel/ai": "^0.3.2",
+        "laravel/boost": "^2.3",
         "laravel/pail": "^1.2.5",
         "laravel/pint": "^1.27",
         "laravel/sail": "^1.54",

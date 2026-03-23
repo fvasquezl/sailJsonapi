@@ -5,10 +5,8 @@ includes:
 parameters:
     paths:
         - app
+        - tests
     bootstrapFiles:
         - _ide_helper_models.php
-    excludePaths:
-        - tests
-        - tests/*
     level: 5
     reportUnmatchedIgnoredErrors: false
