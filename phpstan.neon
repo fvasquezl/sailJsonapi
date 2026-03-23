@@ -1,8 +1,14 @@
 includes:
-    - ./vendor/larastan/larastan/extension.neon
+    - vendor/larastan/larastan/extension.neon
+    - vendor/pestphp/pest/extension.neon
 
 parameters:
     paths:
         - app
+    bootstrapFiles:
+        - _ide_helper_models.php
+    excludePaths:
+        - tests
+        - tests/*
     level: 5
-    checkMissingIterableValueType: false
+    reportUnmatchedIgnoredErrors: false

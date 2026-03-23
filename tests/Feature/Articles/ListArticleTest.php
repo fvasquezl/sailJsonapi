@@ -2,6 +2,8 @@
 
 use App\Models\Article;
 
+
+
 it('can fetch a single article', function () {
     $article = Article::factory()->create();
 
