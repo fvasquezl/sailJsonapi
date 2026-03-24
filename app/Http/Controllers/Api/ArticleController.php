@@ -7,6 +7,7 @@ use App\Http\Resources\ArticleCollection;
 use App\Http\Resources\ArticleResource;
 use App\Models\Article;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ArticleController extends Controller
 {
@@ -15,9 +16,8 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        return ArticleCollection::make(
-            Article::orderBy(request('sort'))->get()
-        );
+        $articles =Article::applySorts(request('sort'))->get();
+        return ArticleCollection::make($articles);
     }
 
     /**
