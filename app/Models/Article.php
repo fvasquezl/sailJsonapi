@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Article extends Model
 {
-    use HasFactory, HasSorts;
+    use HasFactory;
 
     public $allowedSorts = ['title','content'];
 
