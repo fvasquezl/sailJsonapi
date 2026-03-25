@@ -26,10 +26,7 @@ it('can sort articles by title desc', function () {
     Article::factory()->create(['title' => 'A title']);
     Article::factory()->create(['title' => 'B title']);
 
-
-
     $url = route('api.v1.articles.index', ['sort' => '-title']);
-
 
     $this->getJson($url)->assertSeeInOrder([
         'C title',
@@ -70,4 +67,14 @@ it('can sort articles by title and content', function () {
         'C content',
         'B content',
     ]);
+});
+
+it('can sort articles by unknown fields', function () {
+    /** @var TestCase $this */
+
+    Article::factory()->times(3)->create();
+
+    $url = route('api.v1.articles.index').'?sort=unknown';
+
+    $this->getJson($url)->assertBadRequest();
 });

@@ -3,18 +3,19 @@
 namespace App\Models;
 
 
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\Traits\HasSorts;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * @mixin IdeHelperArticle
  */
 class Article extends Model
 {
-    use HasFactory;
+    use HasFactory, HasSorts;
+
+    public $allowedSorts = ['title','content'];
 
     /**
      * The attributes that aren't mass assignable.
@@ -22,6 +23,8 @@ class Article extends Model
      * @var array<string>
      */
     protected $guarded = [];
+
+
 
     /**
      * Get the attributes that should be cast.
@@ -47,19 +50,4 @@ class Article extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function scopeApplySorts(Builder $query): Builder
-    {
-        $sortFields = Str::of(request('sort'))->explode(',');
-        $articleQuery = Article::query();
-
-
-        foreach ($sortFields as $sortField) {
-            $direction = 'asc';
-            if (Str::of($sortField)->startsWith('-')) {
-                $direction = 'desc';
-                $sortField = Str::of($sortField)->substr(1);
-            }
-            $articleQuery->orderBy($sortField, $direction);
-        }
-    }
 }

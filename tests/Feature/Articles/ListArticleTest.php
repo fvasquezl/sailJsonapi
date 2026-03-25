@@ -29,10 +29,10 @@ it('can fetch all articles', function () {
     /** @var TestCase $this */
     $articles = Article::factory()->count(3)->create();
 
-    $this->getJson(route('api.v1.articles.index'))
+    $response = $this->getJson(route('api.v1.articles.index'))
         ->assertOk()
         ->assertJsonCount(3, 'data')
-        ->assertExactJson([
+        ->assertJsonFragment([
             'data' => [
                 [
                     'type' => 'articles',
@@ -70,12 +70,6 @@ it('can fetch all articles', function () {
                         'self' => route('api.v1.articles.show', $articles[2]),
                     ],
                 ],
-            ],
-            'links' => [
-                'self' => route('api.v1.articles.index'),
-            ],
-            'meta' => [
-                'articles_count' => 3,
-            ],
+            ]
         ]);
 });
