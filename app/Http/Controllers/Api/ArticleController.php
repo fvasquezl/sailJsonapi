@@ -7,16 +7,15 @@ use App\Http\Resources\ArticleCollection;
 use App\Http\Resources\ArticleResource;
 use App\Models\Article;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class ArticleController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): ArticleCollection
     {
-        $articles =Article::applySorts()->jsonPaginate();
+        $articles = Article::applyFilters()->applySorts()->jsonPaginate();
 
         return ArticleCollection::make($articles);
     }

@@ -3,10 +3,11 @@
 namespace App\Models;
 
 
-use App\Models\Traits\HasSorts;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 /**
  * @mixin IdeHelperArticle
@@ -15,7 +16,7 @@ class Article extends Model
 {
     use HasFactory;
 
-    public $allowedSorts = ['title','content'];
+    public $allowedSorts = ['title', 'content'];
 
     /**
      * The attributes that aren't mass assignable.
@@ -23,7 +24,6 @@ class Article extends Model
      * @var array<string>
      */
     protected $guarded = [];
-
 
 
     /**
@@ -48,6 +48,36 @@ class Article extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function scopeTitle(Builder $query, $value)
+    {
+        $query->where('title', 'LIKE', "%$value%");
+    }
+
+    public function scopeContent(Builder $query, $value)
+    {
+        $query->where('content', 'LIKE', "%$value%");
+    }
+
+    public function scopeYear(Builder $query, $value)
+    {
+        $query->whereYear('created_at', $value);
+    }
+
+    public function scopeMonth(Builder $query, $value)
+    {
+        $query->whereMonth('created_at', $value);
+    }
+
+    public function scopeSearch(Builder $query, $values)
+    {
+        Str::of($values)->explode(' ')->each(function ($value) use ($query) {
+            $query->orWhere('title', 'LIKE', "%$value%")
+                ->orWhere('content', 'LIKE', "%$value%");
+        });
+
+
     }
 
 }

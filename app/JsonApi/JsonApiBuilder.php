@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 
 class JsonApiBuilder
 {
+
     public function jsonPaginate()
     {
         return function () {
@@ -22,11 +23,11 @@ class JsonApiBuilder
     public function applySorts()
     {
         return function () {
-            if(!property_exists($this->model, 'allowedSorts')){
-                abort(500, 'Please set the public property $allowedSorts inside'.get_class($this->model));
+            if (!property_exists($this->model, 'allowedSorts')) {
+                abort(500, 'Please set the public property $allowedSorts inside' . get_class($this->model));
             }
 
-            if(is_null($sort = request('sort'))){
+            if (is_null($sort = request('sort'))) {
                 return $this;
             }
 
@@ -42,12 +43,29 @@ class JsonApiBuilder
                 }
 
 
-                if(! collect($this->model->allowedSorts)->contains($sortField)){
+                if (!collect($this->model->allowedSorts)->contains($sortField)) {
                     abort(400, "Invalid Query Parameter, {$sortField} is not allowed");
                 }
 
                 $this->orderBy($sortField, $direction);
             }
+            return $this;
+        };
+    }
+
+    public function applyFilters()
+    {
+        return function () {
+            foreach (request('filter', []) as $filter => $value) {
+
+                abort_unless(
+                    $this->hasNamedScope($filter),
+                    400, "The filter, $filter is not allowed"
+                );
+
+                $this->{$filter}($value);
+            }
+
             return $this;
         };
     }

@@ -1,5 +1,5 @@
 <?php
 
-it('can_', function () {
+it('can', function () {
     //
 });
