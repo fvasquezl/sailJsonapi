@@ -17,7 +17,10 @@ it('can filter articles by title', function () {
 
     $url = route('api.v1.articles.index', ['filter[title]' => 'Laravel']);
 
-    $this->getJson($url)
+    $this->getJson($url,[
+        'Accept' => 'application/vnd.api+json',
+        'Content-Type' => 'application/vnd.api+json'
+    ])
         ->assertJsonCount(1, 'data')
         ->assertSee('Aprende laravel desde cero')
         ->assertDontSee('Other Article');

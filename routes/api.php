@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Api\ArticleController;
-use Illuminate\Support\Facades\Route;
+use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 
-Route::get('articles/{article}', [ArticleController::class, 'show'])->name('api.v1.articles.show');
-Route::get('articles', [ArticleController::class, 'index'])->name('api.v1.articles.index');
+JsonApiRoute::server('v1')->name('api.v1.')->resources(function ($server) {
+    $server->resource('articles', \App\Http\Controllers\Api\V1\ArticleController::class);
+});
