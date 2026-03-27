@@ -17,7 +17,7 @@ it('can filter articles by title', function () {
 
     $url = route('api.v1.articles.index', ['filter[title]' => 'Laravel']);
 
-    $this->getJson($url,[
+    $this->jsonApi()->get($url,[
         'Accept' => 'application/vnd.api+json',
         'Content-Type' => 'application/vnd.api+json'
     ])
@@ -40,7 +40,7 @@ it('can filter articles by content', function () {
 
     $url = route('api.v1.articles.index', ['filter[content]' => 'Laravel']);
 
-    $this->getJson($url)
+    $this->jsonApi()->get($url)
         ->assertJsonCount(1, 'data')
         ->assertSee('Aprende laravel desde cero')
         ->assertDontSee('Other Article');
@@ -62,7 +62,7 @@ it('can filter articles by year', function () {
 
     $url = route('api.v1.articles.index', ['filter[year]' => 2020]);
 
-    $this->getJson($url)->assertJsonCount(1, 'data')
+    $this->jsonApi()->get($url)->assertJsonCount(1, 'data')
         ->assertSee('Article from 2020')
         ->assertDontSee('Article from 2021');
 });
@@ -88,7 +88,7 @@ it('can filter articles by month', function () {
 
     $url = route('api.v1.articles.index', ['filter[month]' => 2]);
 
-    $this->getJson($url)->assertJsonCount(2, 'data')
+    $this->jsonApi()->get($url)->assertJsonCount(2, 'data')
         ->assertSee('Article from February')
         ->assertSee('Another Article from February')
         ->assertDontSee('Article from January');
@@ -102,7 +102,7 @@ it('cannot filter articles by unknown filters', function () {
 
     $url = route('api.v1.articles.index', ['filter[unknown]' => 2]);
 
-    $this->getJson($url)->assertStatus(400);
+    $this->jsonApi()->get($url)->assertStatus(400);
 });
 
 
@@ -127,7 +127,7 @@ it('can search articles by title and conten', function () {
 
     $url = route('api.v1.articles.index', ['filter[search]' => 'Aprendible']);
 
-    $this->getJson($url)->assertJsonCount(2, 'data')
+    $this->jsonApi()->get($url)->assertJsonCount(2, 'data')
         ->assertSee('Article from Aprendible')
         ->assertSee('Another Article')
         ->assertDontSee('Content 2');
@@ -160,7 +160,7 @@ it('can search articles by title and conten with multiple terms', function () {
 
     $url = route('api.v1.articles.index', ['filter[search]' => 'Aprendible Laravel']);
 
-    $this->getJson($url)->assertJsonCount(3, 'data')
+    $this->jsonApi()->get($url)->assertJsonCount(3, 'data')
         ->assertSee('Article from Aprendible')
         ->assertSee('Another Article')
         ->assertSee('Another Laravel Article')

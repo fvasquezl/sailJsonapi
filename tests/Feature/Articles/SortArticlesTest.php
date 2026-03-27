@@ -12,7 +12,7 @@ it('can sort articles by title asc', function () {
 
     $url = route('api.v1.articles.index', ['sort' => 'title']);
 
-    $this->getJson($url)->assertSeeInOrder([
+    $this->jsonApi()->get($url)->assertSeeInOrder([
         'A title',
         'B title',
         'C title',
@@ -28,7 +28,7 @@ it('can sort articles by title desc', function () {
 
     $url = route('api.v1.articles.index', ['sort' => '-title']);
 
-    $this->getJson($url)->assertSeeInOrder([
+    $this->jsonApi()->get($url)->assertSeeInOrder([
         'C title',
         'B title',
         'A title',
@@ -54,7 +54,7 @@ it('can sort articles by title and content', function () {
 
     $url = route('api.v1.articles.index').'?sort=title,-content';
 
-    $this->getJson($url)->assertSeeInOrder([
+    $this->jsonApi()->get($url)->assertSeeInOrder([
         'A title',
         'B title',
         'C title',
@@ -62,7 +62,7 @@ it('can sort articles by title and content', function () {
 
     $url = route('api.v1.articles.index').'?sort=-content,title';
 
-    $this->getJson($url)->assertSeeInOrder([
+    $this->jsonApi()->get($url)->assertSeeInOrder([
         'D content',
         'C content',
         'B content',
@@ -76,5 +76,5 @@ it('can sort articles by unknown fields', function () {
 
     $url = route('api.v1.articles.index').'?sort=unknown';
 
-    $this->getJson($url)->assertBadRequest();
+    $this->jsonApi()->get($url)->assertBadRequest();
 });
