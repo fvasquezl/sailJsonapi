@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Purpose
 
-This is a learning project implementing the [JSON:API specification](https://jsonapi.org/) on top of Laravel 13. The goal is to build a proper JSON:API-compliant REST API for a blog-like domain (Articles, Categories, Users).
+This is a learning project implementing the [JSON:API specification](https://jsonapi.org/) on top of Laravel 12 using the `laravel-json-api/laravel` v5 package. The goal is to build a proper JSON:API-compliant REST API for a blog-like domain (Articles, Categories, Users).
 
 ## Commands
 
@@ -28,43 +28,99 @@ vendor/bin/sail bin pint --dirty --format agent
 
 ## Architecture
 
+### Package: laravel-json-api/laravel
+
+The API is built with `laravel-json-api/laravel` v5. This package handles serialization, filtering, sorting, pagination, validation and routing declaratively via Schemas.
+
 ### JSON:API Response Structure
 
-All API responses follow the JSON:API spec. Resources must serialize as:
+The package produces fully spec-compliant responses. Example single resource:
 
 ```json
 {
   "data": {
     "type": "articles",
     "id": "1",
-    "attributes": { "title": "...", "slug": "...", "content": "..." },
-    "links": { "self": "..." }
-  }
+    "attributes": { "title": "...", "slug": "...", "content": "...", "createdAt": "...", "updatedAt": "..." },
+    "links": { "self": "http://localhost/api/v1/articles/1" }
+  },
+  "jsonapi": { "version": "1.0" },
+  "links": { "self": "http://localhost/api/v1/articles/1" }
 }
 ```
 
-- `id` is always cast to `string` via `(string) $this->resource->getRouteKey()`
-- Collections wrap the array under `data` and add a top-level `links.self`
+Collections include pagination `links` and `meta.page` at the top level. Pagination links use `page[number]` before `page[size]` in the query string.
 
 ### API Versioning
 
-Routes are named `api.v1.*` (e.g., `api.v1.articles.show`, `api.v1.articles.index`). All API routes live in `routes/api.php`. There is no route-group version prefix yet — versioning is only in the route names.
+- Routes are named `api.v1.*` (e.g., `api.v1.articles.show`, `api.v1.articles.index`).
+- All API routes live in `routes/api.php` using `JsonApiRoute::server('v1')->name('api.v1.')`.
+- `bootstrap/app.php` sets `apiPrefix: 'api/v1'` — do NOT add `->prefix('v1')` in the routes file.
+
+### Generating JSON:API Classes
+
+No single command creates everything. Run these three for each new resource:
+
+```bash
+vendor/bin/sail artisan jsonapi:resource {type} --model={Model} --server=v1 --no-interaction
+vendor/bin/sail artisan jsonapi:schema {type} --model={Model} --server=v1 --no-interaction
+vendor/bin/sail artisan jsonapi:requests {type} --server=v1 --no-interaction
+vendor/bin/sail artisan jsonapi:controller Api/V1/{Model}Controller --no-interaction
+```
+
+`jsonapi:requests` generates three files: `{Model}Request`, `{Model}Query`, `{Model}CollectionQuery`.
 
 ### Key Files
 
 | Path | Role |
 |------|------|
-| `app/Http/Controllers/Api/ArticleController.php` | Resource controller; only `index` and `show` are implemented |
-| `app/Http/Resources/ArticleResource.php` | Single-resource JSON:API serializer |
-| `app/Http/Resources/ArticleCollection.php` | Collection serializer; delegates per-item to `ArticleResource` |
-| `app/Models/Article.php` | `belongsTo` Category and User; all attributes are unguarded |
-| `tests/Feature/Articles/ListArticleTest.php` | Feature tests using `assertExactJson` against full JSON:API payloads |
+| `app/JsonApi/V1/Server.php` | Registers all schemas, sets `baseUri`, disables authorization (`authorizable(): false`) |
+| `app/JsonApi/V1/Articles/ArticleSchema.php` | Fields, filters (`Scope::make()`), pagination for Articles |
+| `app/JsonApi/V1/Articles/ArticleResource.php` | Serializes attributes and relationships |
+| `app/JsonApi/V1/Articles/ArticleRequest.php` | Validation rules for POST/PATCH body |
+| `app/JsonApi/V1/Articles/ArticleQuery.php` | Validates query params for `GET /articles/{id}` |
+| `app/JsonApi/V1/Articles/ArticleCollectionQuery.php` | Validates query params for `GET /articles` |
+| `app/Http/Controllers/Api/V1/ArticleController.php` | Uses package traits: `FetchMany`, `FetchOne`, `Store`, `Update`, `Destroy` |
+| `app/Models/Article.php` | `belongsTo` Category and User; Eloquent scopes used by `Scope::make()` filters |
+| `routes/api.php` | JSON:API routes via `JsonApiRoute::server('v1')` |
+| `bootstrap/providers.php` | Only `AppServiceProvider` — do not add manual providers removed in refactor |
+| `tests/TestCase.php` | Uses `MakesJsonApiRequests` trait from `laravel-json-api/testing` |
+
+### Schema Patterns
+
+```php
+// Filters map directly to Eloquent scopes on the model
+public function filters(): array {
+    return [
+        WhereIdIn::make($this),
+        Scope::make('title'),   // calls scopeTitle() on the model
+        Scope::make('year'),    // calls scopeYear() on the model
+        Scope::make('search'),  // calls scopeSearch() on the model
+    ];
+}
+```
+
+### Authorization
+
+The Server has `authorizable(): false` — authorization is disabled. If you add it back, unauthenticated requests return 401.
 
 ### Domain Models
 
 - **Article**: `title`, `slug` (unique), `content`, `category_id`, `user_id`
 - **Category**: belongs to many Articles
 - **User**: standard Laravel auth user; authors of Articles
+
+### Testing
+
+Tests use `MakesJsonApiRequests` from `laravel-json-api/testing`. Always use `$this->jsonApi()->get()` instead of `$this->getJson()` — the package requires `Accept: application/vnd.api+json` and responds 406 otherwise.
+
+```php
+// Correct
+$this->jsonApi()->get(route('api.v1.articles.index'))->assertOk();
+
+// Wrong — sends Accept: application/json → 406
+$this->getJson(route('api.v1.articles.index'));
+```
 
 <laravel-boost-guidelines>
 === foundation rules ===
