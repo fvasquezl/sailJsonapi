@@ -23,6 +23,8 @@ class ArticleRequest extends ResourceRequest
             'title' => ['required', 'string'],
             'slug' => $slug,
             'content' => ['required', 'string'],
+            'category' => ['required'],
+            'user' => ['required'],
         ];
     }
 }

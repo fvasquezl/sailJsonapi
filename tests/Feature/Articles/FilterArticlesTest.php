@@ -6,20 +6,19 @@ use Tests\TestCase;
 it('can filter articles by title', function () {
 
     /** @var TestCase $this */
-
     Article::factory()->create([
-        'title' => 'Aprende laravel desde cero'
+        'title' => 'Aprende laravel desde cero',
     ]);
 
     Article::factory()->create([
-        'title' => 'Other Article'
+        'title' => 'Other Article',
     ]);
 
     $url = route('api.v1.articles.index', ['filter[title]' => 'Laravel']);
 
-    $this->jsonApi()->get($url,[
+    $this->jsonApi()->get($url, [
         'Accept' => 'application/vnd.api+json',
-        'Content-Type' => 'application/vnd.api+json'
+        'Content-Type' => 'application/vnd.api+json',
     ])
         ->assertJsonCount(1, 'data')
         ->assertSee('Aprende laravel desde cero')
@@ -29,13 +28,12 @@ it('can filter articles by title', function () {
 it('can filter articles by content', function () {
 
     /** @var TestCase $this */
-
     Article::factory()->create([
-        'content' => '<div>Aprende laravel desde cero</div>'
+        'content' => '<div>Aprende laravel desde cero</div>',
     ]);
 
     Article::factory()->create([
-        'content' => '<div>Other Article</div>'
+        'content' => '<div>Other Article</div>',
     ]);
 
     $url = route('api.v1.articles.index', ['filter[content]' => 'Laravel']);
@@ -49,7 +47,6 @@ it('can filter articles by content', function () {
 it('can filter articles by year', function () {
 
     /** @var TestCase $this */
-
     Article::factory()->create([
         'title' => 'Article from 2020',
         'created_at' => now()->year(2020),
@@ -70,25 +67,25 @@ it('can filter articles by year', function () {
 it('can filter articles by month', function () {
 
     /** @var TestCase $this */
-
     Article::factory()->create([
         'title' => 'Article from February',
-        'created_at' => now()->month(2),
+        'created_at' => now()->startOfMonth()->setMonth(2),
     ]);
 
     Article::factory()->create([
         'title' => 'Another Article from February',
-        'created_at' => now()->month(2),
+        'created_at' => now()->startOfMonth()->setMonth(2),
     ]);
 
     Article::factory()->create([
         'title' => 'Article from January',
-        'created_at' => now()->month(1),
+        'created_at' => now()->startOfMonth()->setMonth(1),
     ]);
 
     $url = route('api.v1.articles.index', ['filter[month]' => 2]);
 
-    $this->jsonApi()->get($url)->assertJsonCount(2, 'data')
+    $this->jsonApi()->get($url)
+        ->assertJsonCount(2, 'data')
         ->assertSee('Article from February')
         ->assertSee('Another Article from February')
         ->assertDontSee('Article from January');
@@ -97,7 +94,6 @@ it('can filter articles by month', function () {
 it('cannot filter articles by unknown filters', function () {
 
     /** @var TestCase $this */
-
     Article::factory()->create();
 
     $url = route('api.v1.articles.index', ['filter[unknown]' => 2]);
@@ -105,11 +101,9 @@ it('cannot filter articles by unknown filters', function () {
     $this->jsonApi()->get($url)->assertStatus(400);
 });
 
-
 it('can search articles by title and conten', function () {
 
     /** @var TestCase $this */
-
     Article::factory()->create([
         'title' => 'Article from Aprendible',
         'content' => 'Content',
@@ -133,11 +127,9 @@ it('can search articles by title and conten', function () {
         ->assertDontSee('Content 2');
 });
 
-
 it('can search articles by title and conten with multiple terms', function () {
 
     /** @var TestCase $this */
-
     Article::factory()->create([
         'title' => 'Article from Aprendible',
         'content' => 'Content',

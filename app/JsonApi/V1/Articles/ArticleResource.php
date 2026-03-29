@@ -24,6 +24,7 @@ class ArticleResource extends JsonApiResource
             'content' => $this->resource->content,
             'createdAt' => $this->resource->created_at,
             'updatedAt' => $this->resource->updated_at,
+
         ];
     }
 
@@ -35,7 +36,8 @@ class ArticleResource extends JsonApiResource
     public function relationships($request): iterable
     {
         return [
-            // @TODO
+            $this->relation('category'),
+            $this->relation('user'),
         ];
     }
 }

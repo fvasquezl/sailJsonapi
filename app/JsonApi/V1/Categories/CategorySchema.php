@@ -1,24 +1,22 @@
 <?php
 
-namespace App\JsonApi\V1\Articles;
+namespace App\JsonApi\V1\Categories;
 
-use App\Models\Article;
+use App\Models\Category;
 use LaravelJsonApi\Eloquent\Contracts\Paginator;
 use LaravelJsonApi\Eloquent\Fields\DateTime;
 use LaravelJsonApi\Eloquent\Fields\ID;
-use LaravelJsonApi\Eloquent\Fields\Relations\BelongsTo;
 use LaravelJsonApi\Eloquent\Fields\Str;
-use LaravelJsonApi\Eloquent\Filters\Scope;
 use LaravelJsonApi\Eloquent\Filters\WhereIdIn;
 use LaravelJsonApi\Eloquent\Pagination\PagePagination;
 use LaravelJsonApi\Eloquent\Schema;
 
-class ArticleSchema extends Schema
+class CategorySchema extends Schema
 {
     /**
      * The model the schema corresponds to.
      */
-    public static string $model = Article::class;
+    public static string $model = Category::class;
 
     /**
      * Get the resource fields.
@@ -27,13 +25,11 @@ class ArticleSchema extends Schema
     {
         return [
             ID::make(),
-            Str::make('title')->sortable(),
+            Str::make('name')->sortable(),
             Str::make('slug'),
             Str::make('content')->sortable(),
             DateTime::make('createdAt')->sortable()->readOnly(),
             DateTime::make('updatedAt')->sortable()->readOnly(),
-            BelongsTo::make('category'),
-            BelongsTo::make('user'),
         ];
     }
 
@@ -44,11 +40,6 @@ class ArticleSchema extends Schema
     {
         return [
             WhereIdIn::make($this),
-            Scope::make('title'),
-            Scope::make('content'),
-            Scope::make('year'),
-            Scope::make('month'),
-            Scope::make('search'),
         ];
     }
 
