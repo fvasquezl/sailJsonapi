@@ -5,8 +5,8 @@ includes:
 parameters:
     paths:
         - app
-        - tests
     bootstrapFiles:
+        - vendor/autoload.php
         - _ide_helper_models.php
     level: 5
     reportUnmatchedIgnoredErrors: false

@@ -3,6 +3,7 @@
 namespace App\JsonApi\V1\Articles;
 
 use App\Models\Article;
+use App\Rules\Slug;
 use Illuminate\Validation\Rule;
 use LaravelJsonApi\Laravel\Http\Requests\ResourceRequest;
 
@@ -15,7 +16,8 @@ class ArticleRequest extends ResourceRequest
     {
         $slug = [
             'required',
-            'string',
+            'alpha_dash',
+            new Slug,
             Rule::unique(Article::class, 'slug')->ignore($this->model()),
         ];
 
