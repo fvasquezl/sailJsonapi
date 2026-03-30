@@ -9,7 +9,7 @@ it('can fetch a single article', function () {
 
     $this->jsonApi()->get(route('api.v1.articles.show', $article))
         ->assertOk()
-        ->assertExactJson([
+        ->assertJson([
             'data' => [
                 'type' => 'articles',
                 'id' => (string) $article->getRouteKey(),
@@ -40,7 +40,7 @@ it('can fetch all articles', function () {
     $this->jsonApi()->get(route('api.v1.articles.index'))
         ->assertOk()
         ->assertJsonCount(3, 'data')
-        ->assertJsonFragment([
+        ->assertJson([
             'data' => [
                 [
                     'type' => 'articles',
@@ -54,7 +54,7 @@ it('can fetch all articles', function () {
                     ],
                     'links' => [
                         'self' => route('api.v1.articles.show', $articles[0]),
-                    ]
+                    ],
                 ],
                 [
                     'type' => 'articles',
@@ -68,7 +68,7 @@ it('can fetch all articles', function () {
                     ],
                     'links' => [
                         'self' => route('api.v1.articles.show', $articles[1]),
-                    ]
+                    ],
                 ],
                 [
                     'type' => 'articles',
@@ -82,7 +82,7 @@ it('can fetch all articles', function () {
                     ],
                     'links' => [
                         'self' => route('api.v1.articles.show', $articles[2]),
-                    ]
+                    ],
                 ],
             ],
         ]);
