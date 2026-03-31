@@ -3,7 +3,6 @@
 namespace App\JsonApi\V1\Articles;
 
 use Illuminate\Auth\Access\Response;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use LaravelJsonApi\Contracts\Auth\Authorizer;

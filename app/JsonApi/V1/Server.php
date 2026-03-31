@@ -35,7 +35,7 @@ class Server extends BaseServer
         return [
             Articles\ArticleSchema::class,
             Categories\CategorySchema::class,
-            Users\UserSchema::class,
+            Authors\AuthorSchema::class,
         ];
     }
 }

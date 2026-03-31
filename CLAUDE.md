@@ -74,12 +74,14 @@ vendor/bin/sail artisan jsonapi:controller Api/V1/{Model}Controller --no-interac
 
 | Path | Role |
 |------|------|
-| `app/JsonApi/V1/Server.php` | Registers all schemas, sets `baseUri`, disables authorization (`authorizable(): false`) |
+| `app/JsonApi/V1/Server.php` | Registers all schemas, sets `baseUri`; `authorizable(): false` (server-level auth disabled) |
 | `app/JsonApi/V1/Articles/ArticleSchema.php` | Fields, filters (`Scope::make()`), pagination for Articles |
 | `app/JsonApi/V1/Articles/ArticleResource.php` | Serializes attributes and relationships |
 | `app/JsonApi/V1/Articles/ArticleRequest.php` | Validation rules for POST/PATCH body |
 | `app/JsonApi/V1/Articles/ArticleQuery.php` | Validates query params for `GET /articles/{id}` |
 | `app/JsonApi/V1/Articles/ArticleCollectionQuery.php` | Validates query params for `GET /articles` |
+| `app/JsonApi/V1/Articles/ArticleAuthorizer.php` | Implements `Authorizer`; controls per-action access for Article endpoints |
+| `app/Policies/ArticlePolicy.php` | Gate policies for `update`/`destroy`; checks ownership (`$article->user->is($user)`) |
 | `app/Http/Controllers/Api/V1/ArticleController.php` | Uses package traits: `FetchMany`, `FetchOne`, `Store`, `Update`, `Destroy` |
 | `app/Models/Article.php` | `belongsTo` Category and User; Eloquent scopes used by `Scope::make()` filters |
 | `routes/api.php` | JSON:API routes via `JsonApiRoute::server('v1')` |
@@ -102,7 +104,20 @@ public function filters(): array {
 
 ### Authorization
 
-The Server has `authorizable(): false` — authorization is disabled. If you add it back, unauthenticated requests return 401.
+Authorization is handled at the resource level via `ArticleAuthorizer` (implements `LaravelJsonApi\Contracts\Auth\Authorizer`), NOT via the server-level flag (`Server::authorizable()` remains `false`).
+
+**`ArticleAuthorizer` rules:**
+- `index`, `show` → public (returns `true`)
+- `store` → requires authenticated user: `(bool) $request->user()` → 401 if guest
+- `update`, `destroy` → delegates to `Gate::inspect('update'|'destroy', $model)` → 403 if not owner
+- All relationship actions → blocked (`false`)
+
+**`ArticlePolicy`** (`app/Policies/ArticlePolicy.php`) — auto-discovered by Laravel (no manual Gate registration needed):
+- `update` / `destroy` → `$article->user->is($user)` (owner-only)
+
+**In tests**, use `Sanctum::actingAs($user)` to authenticate. Guest requests to protected endpoints return 401; authenticated non-owners get 403.
+
+**No auth middleware** is registered in `bootstrap/app.php` — authentication is enforced entirely by the Authorizer.
 
 ### Domain Models
 

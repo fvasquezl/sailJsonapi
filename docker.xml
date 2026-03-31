@@ -1,0 +1,13 @@
+<application>
+  <component name="DockerApplicationSettings">
+    <option name="connectedServerId" value="local-docker" />
+    <servers>
+      <DockerServer
+        id="local-docker"
+        name="Docker"
+        enabled="true"
+        connectMode="UNIX_SOCKET"
+        unixSocket="/var/run/docker.sock" />
+    </servers>
+  </component>
+</application>
