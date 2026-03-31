@@ -20,7 +20,6 @@ class ArticleAuthorizer implements Authorizer
 
     /**
      * Authorize the store controller action.
-     * @throws AuthenticationException
      */
     public function store(Request $request, string $modelClass): bool|Response
     {
@@ -37,7 +36,6 @@ class ArticleAuthorizer implements Authorizer
 
     /**
      * Authorize the update controller action.
-     * @throws AuthenticationException
      */
     public function update(Request $request, object $model): bool|Response
     {
@@ -57,7 +55,7 @@ class ArticleAuthorizer implements Authorizer
      */
     public function showRelated(Request $request, object $model, string $fieldName): bool|Response
     {
-        return true;
+        return false;
     }
 
     /**
@@ -65,7 +63,7 @@ class ArticleAuthorizer implements Authorizer
      */
     public function showRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        return true;
+        return false;
     }
 
     /**
@@ -73,7 +71,7 @@ class ArticleAuthorizer implements Authorizer
      */
     public function updateRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        return true;
+        return false;
     }
 
     /**
@@ -81,7 +79,7 @@ class ArticleAuthorizer implements Authorizer
      */
     public function attachRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        return true;
+        return false;
     }
 
     /**
@@ -89,6 +87,6 @@ class ArticleAuthorizer implements Authorizer
      */
     public function detachRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        return true;
+        return false;
     }
 }
