@@ -156,8 +156,8 @@ it('slug must not contain underscores', function () {
 
     $this->jsonApi()
         ->withData($data)
-        ->post(route('api.v1.articles.store'))
-        ->assertSee(__('validation.no_underscores',['attribute' => 'slug']))
+        ->post(route('api.v1.articles.store'))->dump()
+        ->assertSee(__('validation.no_underscores', ['attribute' => 'slug']))
         ->assertUnprocessable() // 422
         ->assertSee('data\/attributes\/slug');
 
@@ -178,7 +178,7 @@ it('slug must not start with dashes', function () {
     $this->jsonApi()
         ->withData($data)
         ->post(route('api.v1.articles.store'))
-        ->assertSee(__('validation.no_starting_dashes',['attribute' => 'slug']))
+        ->assertSee(__('validation.no_starting_dashes', ['attribute' => 'slug']))
         ->assertUnprocessable() // 422
         ->assertSee('data\/attributes\/slug');
 
@@ -199,7 +199,7 @@ it('slug must not end with dashes', function () {
     $this->jsonApi()
         ->withData($data)
         ->post(route('api.v1.articles.store'))
-        ->assertSee(__('validation.no_ending_dashes',['attribute' => 'slug']))
+        ->assertSee(__('validation.no_ending_dashes', ['attribute' => 'slug']))
         ->assertUnprocessable() // 422
         ->assertSee('data\/attributes\/slug');
 

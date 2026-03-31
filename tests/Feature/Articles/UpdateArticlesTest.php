@@ -1,6 +1,5 @@
 <?php
 
-
 // Pest
 use App\Models\Article;
 use App\Models\User;
@@ -11,10 +10,9 @@ it('guest users cannot update articles', function () {
     $article = Article::factory()->create();
 
     $this->jsonApi()
-        ->patch(route('api.v1.articles.update',$article))
-        ->assertUnauthorized();// 401
+        ->patch(route('api.v1.articles.update', $article))
+        ->assertUnauthorized(); // 401
 });
-
 
 it('authenticated users can update their articles', function () {
 
@@ -30,10 +28,10 @@ it('authenticated users can update their articles', function () {
                 'title' => 'Title changed',
                 'slug' => 'slug-changed',
                 'content' => 'Content changed',
-            ]
+            ],
         ])
-        ->patch(route('api.v1.articles.update',$article))
-        ->assertOK(); //200
+        ->patch(route('api.v1.articles.update', $article))
+        ->assertOK(); // 200
 
     $this->assertDatabaseHas('articles', [
         'title' => 'Title changed',
@@ -41,7 +39,6 @@ it('authenticated users can update their articles', function () {
         'content' => 'Content changed',
     ]);
 });
-
 
 it('authenticated users cannot update other articles', function () {
 
@@ -57,10 +54,10 @@ it('authenticated users cannot update other articles', function () {
                 'title' => 'Title changed',
                 'slug' => 'slug-changed',
                 'content' => 'Content changed',
-            ]
+            ],
         ])
-        ->patch(route('api.v1.articles.update',$article))
-        ->assertForbidden(); //403
+        ->patch(route('api.v1.articles.update', $article))
+        ->assertForbidden(); // 403
 
     $this->assertDatabaseMissing('articles', [
         'title' => 'Title changed',
@@ -68,7 +65,6 @@ it('authenticated users cannot update other articles', function () {
         'content' => 'Content changed',
     ]);
 });
-
 
 it('authenticated users can update title only', function () {
 
@@ -82,16 +78,15 @@ it('authenticated users can update title only', function () {
             'id' => $article->getRouteKey(),
             'attributes' => [
                 'title' => 'Title changed',
-            ]
+            ],
         ])
-        ->patch(route('api.v1.articles.update',$article))
-        ->assertOK(); //200
+        ->patch(route('api.v1.articles.update', $article))
+        ->assertOK(); // 200
 
     $this->assertDatabaseHas('articles', [
         'title' => 'Title changed',
     ]);
 });
-
 
 it('authenticated users can update slug only', function () {
 
@@ -105,10 +100,10 @@ it('authenticated users can update slug only', function () {
             'id' => $article->getRouteKey(),
             'attributes' => [
                 'slug' => 'slug-changed',
-            ]
+            ],
         ])
-        ->patch(route('api.v1.articles.update',$article))
-        ->assertOK(); //200
+        ->patch(route('api.v1.articles.update', $article))
+        ->assertOK(); // 200
 
     $this->assertDatabaseHas('articles', [
         'slug' => 'slug-changed',
