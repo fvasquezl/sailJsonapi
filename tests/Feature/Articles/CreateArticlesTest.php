@@ -5,9 +5,7 @@ use App\Models\Article;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
-it('guest users cannot create articles',
-    function () {
-
+it('guest users cannot create articles', function () {
         $article = $this->jsonData(['user' => null]);
 
         $this->jsonApi()
@@ -156,7 +154,7 @@ it('slug must not contain underscores', function () {
 
     $this->jsonApi()
         ->withData($data)
-        ->post(route('api.v1.articles.store'))->dump()
+        ->post(route('api.v1.articles.store'))
         ->assertSee(__('validation.no_underscores', ['attribute' => 'slug']))
         ->assertUnprocessable() // 422
         ->assertSee('data\/attributes\/slug');

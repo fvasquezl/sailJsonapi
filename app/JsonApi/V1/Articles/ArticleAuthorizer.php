@@ -3,6 +3,7 @@
 namespace App\JsonApi\V1\Articles;
 
 use Illuminate\Auth\Access\Response;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use LaravelJsonApi\Contracts\Auth\Authorizer;
@@ -19,10 +20,11 @@ class ArticleAuthorizer implements Authorizer
 
     /**
      * Authorize the store controller action.
+     * @throws AuthenticationException
      */
     public function store(Request $request, string $modelClass): bool|Response
     {
-        return true;
+        return (bool) $request->user();
     }
 
     /**
@@ -35,6 +37,7 @@ class ArticleAuthorizer implements Authorizer
 
     /**
      * Authorize the update controller action.
+     * @throws AuthenticationException
      */
     public function update(Request $request, object $model): bool|Response
     {
@@ -46,7 +49,7 @@ class ArticleAuthorizer implements Authorizer
      */
     public function destroy(Request $request, object $model): bool|Response
     {
-        return true;
+        return Gate::inspect('destroy', $model);
     }
 
     /**

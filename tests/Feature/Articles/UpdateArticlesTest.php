@@ -7,9 +7,19 @@ use Laravel\Sanctum\Sanctum;
 
 it('guest users cannot update articles', function () {
 
+
     $article = Article::factory()->create();
 
     $this->jsonApi()
+        ->withData([
+            'type' => 'articles',
+            'id' => $article->getRouteKey(),
+            'attributes' => [
+                'title' => 'Title false',
+                'slug' => 'slug-false',
+                'content' => 'Content false',
+            ],
+        ])
         ->patch(route('api.v1.articles.update', $article))
         ->assertUnauthorized(); // 401
 });

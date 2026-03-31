@@ -9,6 +9,11 @@ class ArticlePolicy
 {
     public function update(User $user, Article $article): bool
     {
-        return $user->id === $article->user_id;
+        return $article->user->is($user);
+    }
+
+    public function destroy(User $user, Article $article): bool
+    {
+        return $article->user->is($user);
     }
 }
