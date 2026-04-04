@@ -1,141 +1,14 @@
-# CLAUDE.md
+## Approach
+- Think before acting. Read existing files before writing code.
+- Be concise in output but thorough in reasoning.
+- Prefer editing over rewriting whole files.
+- Do not re-read files you have already read unless the file may have changed.
+- Test your code before declaring done.
+- No sycophantic openers or closing fluff.
+- Keep solutions simple and direct.
+- User instructions always override this file.
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Project Purpose
-
-This is a learning project implementing the [JSON:API specification](https://jsonapi.org/) on top of Laravel 12 using the `laravel-json-api/laravel` v5 package. The goal is to build a proper JSON:API-compliant REST API for a blog-like domain (Articles, Categories, Users).
-
-## Commands
-
-```bash
-# Start/stop
-vendor/bin/sail up -d
-vendor/bin/sail stop
-
-# Run all tests
-vendor/bin/sail artisan test --compact
-
-# Run a specific test
-vendor/bin/sail artisan test --compact --filter=testName
-
-# Static analysis (PHPStan level 5)
-vendor/bin/sail bin phpstan analyse
-
-# Format PHP after changes
-vendor/bin/sail bin pint --dirty --format agent
-```
-
-## Architecture
-
-### Package: laravel-json-api/laravel
-
-The API is built with `laravel-json-api/laravel` v5. This package handles serialization, filtering, sorting, pagination, validation and routing declaratively via Schemas.
-
-### JSON:API Response Structure
-
-The package produces fully spec-compliant responses. Example single resource:
-
-```json
-{
-  "data": {
-    "type": "articles",
-    "id": "1",
-    "attributes": { "title": "...", "slug": "...", "content": "...", "createdAt": "...", "updatedAt": "..." },
-    "links": { "self": "http://localhost/api/v1/articles/1" }
-  },
-  "jsonapi": { "version": "1.0" },
-  "links": { "self": "http://localhost/api/v1/articles/1" }
-}
-```
-
-Collections include pagination `links` and `meta.page` at the top level. Pagination links use `page[number]` before `page[size]` in the query string.
-
-### API Versioning
-
-- Routes are named `api.v1.*` (e.g., `api.v1.articles.show`, `api.v1.articles.index`).
-- All API routes live in `routes/api.php` using `JsonApiRoute::server('v1')->name('api.v1.')`.
-- `bootstrap/app.php` sets `apiPrefix: 'api/v1'` — do NOT add `->prefix('v1')` in the routes file.
-
-### Generating JSON:API Classes
-
-No single command creates everything. Run these three for each new resource:
-
-```bash
-vendor/bin/sail artisan jsonapi:resource {type} --model={Model} --server=v1 --no-interaction
-vendor/bin/sail artisan jsonapi:schema {type} --model={Model} --server=v1 --no-interaction
-vendor/bin/sail artisan jsonapi:requests {type} --server=v1 --no-interaction
-vendor/bin/sail artisan jsonapi:controller Api/V1/{Model}Controller --no-interaction
-```
-
-`jsonapi:requests` generates three files: `{Model}Request`, `{Model}Query`, `{Model}CollectionQuery`.
-
-### Key Files
-
-| Path | Role |
-|------|------|
-| `app/JsonApi/V1/Server.php` | Registers all schemas, sets `baseUri`; `authorizable(): false` (server-level auth disabled) |
-| `app/JsonApi/V1/Articles/ArticleSchema.php` | Fields, filters (`Scope::make()`), pagination for Articles |
-| `app/JsonApi/V1/Articles/ArticleResource.php` | Serializes attributes and relationships |
-| `app/JsonApi/V1/Articles/ArticleRequest.php` | Validation rules for POST/PATCH body |
-| `app/JsonApi/V1/Articles/ArticleQuery.php` | Validates query params for `GET /articles/{id}` |
-| `app/JsonApi/V1/Articles/ArticleCollectionQuery.php` | Validates query params for `GET /articles` |
-| `app/JsonApi/V1/Articles/ArticleAuthorizer.php` | Implements `Authorizer`; controls per-action access for Article endpoints |
-| `app/Policies/ArticlePolicy.php` | Gate policies for `update`/`destroy`; checks ownership (`$article->user->is($user)`) |
-| `app/Http/Controllers/Api/V1/ArticleController.php` | Uses package traits: `FetchMany`, `FetchOne`, `Store`, `Update`, `Destroy` |
-| `app/Models/Article.php` | `belongsTo` Category and User; Eloquent scopes used by `Scope::make()` filters |
-| `routes/api.php` | JSON:API routes via `JsonApiRoute::server('v1')` |
-| `bootstrap/providers.php` | Only `AppServiceProvider` — do not add manual providers removed in refactor |
-| `tests/TestCase.php` | Uses `MakesJsonApiRequests` trait from `laravel-json-api/testing` |
-
-### Schema Patterns
-
-```php
-// Filters map directly to Eloquent scopes on the model
-public function filters(): array {
-    return [
-        WhereIdIn::make($this),
-        Scope::make('title'),   // calls scopeTitle() on the model
-        Scope::make('year'),    // calls scopeYear() on the model
-        Scope::make('search'),  // calls scopeSearch() on the model
-    ];
-}
-```
-
-### Authorization
-
-Authorization is handled at the resource level via `ArticleAuthorizer` (implements `LaravelJsonApi\Contracts\Auth\Authorizer`), NOT via the server-level flag (`Server::authorizable()` remains `false`).
-
-**`ArticleAuthorizer` rules:**
-- `index`, `show` → public (returns `true`)
-- `store` → requires authenticated user: `(bool) $request->user()` → 401 if guest
-- `update`, `destroy` → delegates to `Gate::inspect('update'|'destroy', $model)` → 403 if not owner
-- All relationship actions → blocked (`false`)
-
-**`ArticlePolicy`** (`app/Policies/ArticlePolicy.php`) — auto-discovered by Laravel (no manual Gate registration needed):
-- `update` / `destroy` → `$article->user->is($user)` (owner-only)
-
-**In tests**, use `Sanctum::actingAs($user)` to authenticate. Guest requests to protected endpoints return 401; authenticated non-owners get 403.
-
-**No auth middleware** is registered in `bootstrap/app.php` — authentication is enforced entirely by the Authorizer.
-
-### Domain Models
-
-- **Article**: `title`, `slug` (unique), `content`, `category_id`, `user_id`
-- **Category**: belongs to many Articles
-- **User**: standard Laravel auth user; authors of Articles
-
-### Testing
-
-Tests use `MakesJsonApiRequests` from `laravel-json-api/testing`. Always use `$this->jsonApi()->get()` instead of `$this->getJson()` — the package requires `Accept: application/vnd.api+json` and responds 406 otherwise.
-
-```php
-// Correct
-$this->jsonApi()->get(route('api.v1.articles.index'))->assertOk();
-
-// Wrong — sends Accept: application/json → 406
-$this->getJson(route('api.v1.articles.index'));
-```
+===
 
 <laravel-boost-guidelines>
 === foundation rules ===
@@ -167,6 +40,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
+- `laravel-best-practices` — Apply this skill whenever writing, reviewing, or refactoring Laravel PHP code. This includes creating or modifying controllers, models, migrations, form requests, policies, jobs, scheduled commands, service classes, and Eloquent queries. Triggers for N+1 and query performance issues, caching strategies, authorization and security patterns, validation, error handling, queue and job configuration, route definitions, and architectural decisions. Also use for Laravel code reviews and refactoring existing Laravel code to follow best practices. Covers any task involving Laravel backend PHP code patterns.
 - `pest-testing` — Use this skill for Pest PHP testing in Laravel projects only. Trigger whenever any test is being written, edited, fixed, or refactored — including fixing tests that broke after a code change, adding assertions, converting PHPUnit to Pest, adding datasets, and TDD workflows. Always activate when the user asks how to write something in Pest, mentions test files or directories (tests/Feature, tests/Unit, tests/Browser), or needs browser testing, smoke testing multiple pages for JS errors, or architecture tests. Covers: it()/expect() syntax, datasets, mocking, browser testing (visit/click/fill), smoke testing, arch(), Livewire component tests, RefreshDatabase, and all Pest 4 features. Do not use for factories, seeders, migrations, controllers, models, or non-test PHP code.
 - `tailwindcss-development` — Always invoke when the user's message includes 'tailwind' in any form. Also invoke for: building responsive grid layouts (multi-column card grids, product grids), flex/grid page structures (dashboards with sidebars, fixed topbars, mobile-toggle navs), styling UI components (cards, tables, navbars, pricing sections, forms, inputs, badges), adding dark mode variants, fixing spacing or typography, and Tailwind v3/v4 work. The core use case: writing or fixing Tailwind utility classes in HTML templates (Blade, JSX, Vue). Skip for backend PHP logic, database queries, API routes, JavaScript with no HTML/CSS component, CSS file audits, build tool configuration, and vanilla CSS.
 - `ai-sdk-development` — Builds AI agents, generates text and chat responses, produces images, synthesizes audio, transcribes speech, generates vector embeddings, reranks documents, and manages files and vector stores using the Laravel AI SDK (laravel/ai). Supports structured output, streaming, tools, conversation memory, middleware, queueing, broadcasting, and provider failover. Use when building, editing, updating, debugging, or testing any AI functionality, including agents, LLMs, chatbots, text generation, image generation, audio, transcription, embeddings, RAG, similarity search, vector stores, prompting, structured output, or any AI provider (OpenAI, Anthropic, Gemini, Cohere, Groq, xAI, ElevenLabs, Jina, OpenRouter).
@@ -202,82 +76,51 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 # Laravel Boost
 
-- Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
+## Tools
 
-## Artisan Commands
+- Laravel Boost is an MCP server with tools designed specifically for this application. Prefer Boost tools over manual alternatives like shell commands or file reads.
+- Use `database-query` to run read-only queries against the database instead of writing raw SQL in tinker.
+- Use `database-schema` to inspect table structure before writing migrations or models.
+- Use `get-absolute-url` to resolve the correct scheme, domain, and port for project URLs. Always use this before sharing a URL with the user.
+- Use `browser-logs` to read browser logs, errors, and exceptions. Only recent logs are useful, ignore old entries.
 
-- Run Artisan commands directly via the command line (e.g., `vendor/bin/sail artisan route:list`, `vendor/bin/sail artisan tinker --execute "..."`).
-- Use `vendor/bin/sail artisan list` to discover available commands and `vendor/bin/sail artisan [command] --help` to check parameters.
+## Searching Documentation (IMPORTANT)
 
-## URLs
+- Always use `search-docs` before making code changes. Do not skip this step. It returns version-specific docs based on installed packages automatically.
+- Pass a `packages` array to scope results when you know which packages are relevant.
+- Use multiple broad, topic-based queries: `['rate limiting', 'routing rate limiting', 'routing']`. Expect the most relevant results first.
+- Do not add package names to queries because package info is already shared. Use `test resource table`, not `filament 4 test resource table`.
 
-- Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
+### Search Syntax
 
-## Debugging
+1. Use words for auto-stemmed AND logic: `rate limit` matches both "rate" AND "limit".
+2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
+3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
+4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
 
-- Use the `database-query` tool when you only need to read from the database.
-- Use the `database-schema` tool to inspect table structure before writing migrations or models.
-- To execute PHP code for debugging, run `vendor/bin/sail artisan tinker --execute "your code here"` directly.
-- To read configuration values, read the config files directly or run `vendor/bin/sail artisan config:show [key]`.
-- To inspect routes, run `vendor/bin/sail artisan route:list` directly.
+## Artisan
+
+- Run Artisan commands directly via the command line (e.g., `vendor/bin/sail artisan route:list`). Use `vendor/bin/sail artisan list` to discover available commands and `vendor/bin/sail artisan [command] --help` to check parameters.
+- Inspect routes with `vendor/bin/sail artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
+- Read configuration values using dot notation: `vendor/bin/sail artisan config:show app.name`, `vendor/bin/sail artisan config:show database.default`. Or read config files directly from the `config/` directory.
 - To check environment variables, read the `.env` file directly.
 
-## Reading Browser Logs With the `browser-logs` Tool
+## Tinker
 
-- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
-- Only recent browser logs will be useful - ignore old logs.
-
-## Searching Documentation (Critically Important)
-
-- Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
-- Search the documentation before making code changes to ensure we are taking the correct approach.
-- Use multiple, broad, simple, topic-based queries at once. For example: `['rate limiting', 'routing rate limiting', 'routing']`. The most relevant results will be returned first.
-- Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
-
-### Available Search Syntax
-
-1. Simple Word Searches with auto-stemming - query=authentication - finds 'authenticate' and 'auth'.
-2. Multiple Words (AND Logic) - query=rate limit - finds knowledge containing both "rate" AND "limit".
-3. Quoted Phrases (Exact Position) - query="infinite scroll" - words must be adjacent and in that order.
-4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit".
-5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms.
+- Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
+- Always use single quotes to prevent shell expansion: `vendor/bin/sail artisan tinker --execute 'Your::code();'`
+  - Double quotes for PHP strings inside: `vendor/bin/sail artisan tinker --execute 'User::where("active", true)->count();'`
 
 === php rules ===
 
 # PHP
 
 - Always use curly braces for control structures, even for single-line bodies.
-
-## Constructors
-
-- Use PHP 8 constructor property promotion in `__construct()`.
-    - `public function __construct(public GitHub $github) { }`
-- Do not allow empty `__construct()` methods with zero parameters unless the constructor is private.
-
-## Type Declarations
-
-- Always use explicit return type declarations for methods and functions.
-- Use appropriate PHP type hints for method parameters.
-
-<!-- Explicit Return Types and Method Params -->
-```php
-protected function isAccessible(User $user, ?string $path = null): bool
-{
-    ...
-}
-```
-
-## Enums
-
-- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
-
-## Comments
-
-- Prefer PHPDoc blocks over inline comments. Never use comments within the code itself unless the logic is exceptionally complex.
-
-## PHPDoc Blocks
-
-- Add useful array shape type definitions when appropriate.
+- Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`. Do not leave empty zero-parameter `__construct()` methods unless the constructor is private.
+- Use explicit return type declarations and type hints for all method parameters: `function isAccessible(User $user, ?string $path = null): bool`
+- Use TitleCase for Enum keys: `FavoritePerson`, `BestLake`, `Monthly`.
+- Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
+- Use array shape type definitions in PHPDoc blocks.
 
 === sail rules ===
 
@@ -293,6 +136,13 @@ protected function isAccessible(User $user, ?string $path = null): bool
     - Execute PHP scripts: `vendor/bin/sail php [script]`
 - View all available Sail commands by running `vendor/bin/sail` without arguments.
 
+=== tests rules ===
+
+# Test Enforcement
+
+- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
+- Run the minimum number of tests needed to ensure code quality and speed. Use `vendor/bin/sail artisan test --compact` with a specific filename or filter.
+
 === laravel/core rules ===
 
 # Do Things the Laravel Way
@@ -301,42 +151,17 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - If you're creating a generic PHP class, use `vendor/bin/sail artisan make:class`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
-## Database
-
-- Always use proper Eloquent relationship methods with return type hints. Prefer relationship methods over raw queries or manual joins.
-- Use Eloquent models and relationships before suggesting raw database queries.
-- Avoid `DB::`; prefer `Model::query()`. Generate code that leverages Laravel's ORM capabilities rather than bypassing them.
-- Generate code that prevents N+1 query problems by using eager loading.
-- Use Laravel's query builder for very complex database operations.
-
 ### Model Creation
 
 - When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `vendor/bin/sail artisan make:model --help` to check the available options.
 
-### APIs & Eloquent Resources
+## APIs & Eloquent Resources
 
 - For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
-
-## Controllers & Validation
-
-- Always create Form Request classes for validation rather than inline validation in controllers. Include both validation rules and custom error messages.
-- Check sibling Form Requests to see if the application uses array or string based validation rules.
-
-## Authentication & Authorization
-
-- Use Laravel's built-in authentication and authorization features (gates, policies, Sanctum, etc.).
 
 ## URL Generation
 
 - When generating links to other pages, prefer named routes and the `route()` function.
-
-## Queues
-
-- Use queued jobs for time-consuming operations with the `ShouldQueue` interface.
-
-## Configuration
-
-- Use environment variables only in configuration files - never use the `env()` function directly outside of config files. Always use `config('app.name')`, not `env('APP_NAME')`.
 
 ## Testing
 

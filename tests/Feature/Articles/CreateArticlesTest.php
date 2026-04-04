@@ -6,15 +6,16 @@ use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
 it('guest users cannot create articles', function () {
-        $article = $this->jsonData(['user' => null]);
 
-        $this->jsonApi()
-            ->withData($article)
-            ->post(route('api.v1.articles.store'))
-            ->assertUnauthorized(); // 401
+    $article = $this->jsonData(['user' => null]);
 
-        $this->assertDatabaseMissing('articles', $article);
-    });
+    $this->jsonApi()
+        ->withData($article)
+        ->post(route('api.v1.articles.store'))
+        ->assertUnauthorized(); // 401
+
+    $this->assertDatabaseMissing('articles', $article);
+});
 
 // Pest
 it('authenticated users can create articles', function () {

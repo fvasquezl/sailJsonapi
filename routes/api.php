@@ -7,7 +7,6 @@ use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
 JsonApiRoute::server('v1')
     ->name('api.v1.')
     ->resources(function ($server) {
-    $server->resource('articles', ArticleController::class);
-    $server->resource('authors', JsonApiController::class)->only('index');
-});
-
+        $server->resource('articles', ArticleController::class);
+        $server->resource('authors', JsonApiController::class)->only('index', 'show');
+    });

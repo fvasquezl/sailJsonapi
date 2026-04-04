@@ -33,7 +33,7 @@ trait CreateData
                     'data' => ['type' => 'categories', 'id' => (string) $this->category->id],
                 ],
                 'user' => [
-                    'data' => ['type' => 'users', 'id' => (string) $user->id],
+                    'data' => ['type' => 'authors', 'id' => (string) $user->id],
                 ],
             ],
         ];
