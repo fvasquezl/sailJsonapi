@@ -35,7 +35,7 @@ class Article extends Model
         return [
             'id' => 'integer',
             'category_id' => 'integer',
-            'user_id' => 'integer',
+            'user_id' => 'string',
         ];
     }
 

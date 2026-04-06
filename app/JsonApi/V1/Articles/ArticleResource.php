@@ -37,7 +37,7 @@ class ArticleResource extends JsonApiResource
     {
         return [
             $this->relation('category'),
-            $this->relation('user'),
+            $this->relation('authors', 'user'),
         ];
     }
 }

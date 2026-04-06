@@ -8,7 +8,6 @@ use App\Models\User;
 
 trait CreateData
 {
-
     public Category $category;
 
     public Article $article;
@@ -16,6 +15,7 @@ trait CreateData
     public function jsonData(array $attributes = []): array
     {
         $user = $attributes['user'] ?? User::factory()->create();
+
         $this->category = $attributes['category'] ?? Category::factory()->create();
         $this->article = Article::factory()->make(
             array_diff_key($attributes, ['user' => true, 'category' => true])
@@ -32,7 +32,7 @@ trait CreateData
                 'category' => [
                     'data' => ['type' => 'categories', 'id' => (string) $this->category->id],
                 ],
-                'user' => [
+                'authors' => [
                     'data' => ['type' => 'authors', 'id' => (string) $user->id],
                 ],
             ],

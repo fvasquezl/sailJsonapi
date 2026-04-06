@@ -7,7 +7,6 @@ use Laravel\Sanctum\Sanctum;
 
 it('guest users cannot update articles', function () {
 
-
     $article = Article::factory()->create();
 
     $this->jsonApi()

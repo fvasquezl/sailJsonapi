@@ -20,6 +20,7 @@ class ArticleSchema extends Schema
      */
     public static string $model = Article::class;
 
+
     /**
      * Get the resource fields.
      */
@@ -33,7 +34,7 @@ class ArticleSchema extends Schema
             DateTime::make('createdAt')->sortable()->readOnly(),
             DateTime::make('updatedAt')->sortable()->readOnly(),
             BelongsTo::make('category'),
-            BelongsTo::make('user')->type('authors'),
+            BelongsTo::make('authors', 'user')->type('authors'),
         ];
     }
 

@@ -26,7 +26,7 @@ class AuthorSchema extends Schema
     public function fields(): array
     {
         return [
-            ID::make(),
+            ID::make()->uuid(),
             Str::make('name'),
             DateTime::make('createdAt')->sortable()->readOnly(),
             DateTime::make('updatedAt')->sortable()->readOnly(),

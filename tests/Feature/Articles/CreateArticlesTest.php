@@ -21,7 +21,9 @@ it('guest users cannot create articles', function () {
 it('authenticated users can create articles', function () {
 
     $user = User::factory()->create();
+
     $data = $this->jsonData(['user' => $user]);
+
 
     $this->assertDatabaseMissing('articles', [
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
@@ -192,6 +194,7 @@ it('slug must not end with dashes', function () {
     $user = User::factory()->create();
 
     $data = $this->jsonData(['user' => $user, 'slug' => 'end-with-dash-']);
+
 
     Sanctum::actingAs($user);
 
