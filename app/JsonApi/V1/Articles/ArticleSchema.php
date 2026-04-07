@@ -34,7 +34,8 @@ class ArticleSchema extends Schema
             DateTime::make('createdAt')->sortable()->readOnly(),
             DateTime::make('updatedAt')->sortable()->readOnly(),
             BelongsTo::make('category'),
-            BelongsTo::make('authors', 'user')->type('authors'),
+            BelongsTo::make('authors', 'user')
+                ->type('authors'),
         ];
     }
 

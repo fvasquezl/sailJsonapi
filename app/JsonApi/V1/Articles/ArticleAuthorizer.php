@@ -54,7 +54,7 @@ class ArticleAuthorizer implements Authorizer
      */
     public function showRelated(Request $request, object $model, string $fieldName): bool|Response
     {
-        return false;
+        return true;
     }
 
     /**
@@ -62,7 +62,7 @@ class ArticleAuthorizer implements Authorizer
      */
     public function showRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        return false;
+        return true;
     }
 
     /**

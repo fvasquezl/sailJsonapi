@@ -26,7 +26,7 @@ class ArticleRequest extends ResourceRequest
             'slug' => $slug,
             'content' => ['required', 'string'],
             'category' => ['required'],
-            'authors' => ['required'],
+            'authors' => [$this->isCreating() ? 'required' : 'sometimes'],
         ];
     }
 }
