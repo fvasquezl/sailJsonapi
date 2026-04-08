@@ -6,9 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * @mixin IdeHelperCategory
- */
 class Category extends Model
 {
     use HasFactory;
@@ -30,6 +27,14 @@ class Category extends Model
         return [
             'id' => 'integer',
         ];
+    }
+
+    /**
+     * @return string
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
     }
 
     public function articles(): HasMany

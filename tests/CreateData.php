@@ -30,13 +30,12 @@ trait CreateData
             ],
             'relationships' => [
                 'category' => [
-                    'data' => ['type' => 'categories', 'id' => (string) $this->category->id],
+                    'data' => ['type' => 'categories', 'id' => (string) $this->category->getRouteKey()],
                 ],
                 'authors' => [
-                    'data' => ['type' => 'authors', 'id' => (string) $user->id],
+                    'data' => ['type' => 'authors', 'id' => (string) $user->getRouteKey()],
                 ],
             ],
         ];
-
     }
 }

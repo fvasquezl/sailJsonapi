@@ -9,9 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
-/**
- * @mixin IdeHelperArticle
- */
+
 class Article extends Model
 {
     use HasFactory;
@@ -39,42 +37,76 @@ class Article extends Model
         ];
     }
 
+    /**
+     * @return string
+     */
     public function getRouteKeyName(): string
     {
         return 'slug';
     }
 
+    /**
+     * @return BelongsTo
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
+    /**
+     * @return BelongsTo
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function scopeTitle(Builder $query, $value)
+    /**
+     * @param Builder $query
+     * @param $value
+     * @return void
+     */
+    public function scopeTitle(Builder $query, $value): void
     {
         $query->where('title', 'LIKE', "%$value%");
     }
 
-    public function scopeContent(Builder $query, $value)
+    /**
+     * @param Builder $query
+     * @param $value
+     * @return void
+     */
+    public function scopeContent(Builder $query, $value): void
     {
         $query->where('content', 'LIKE', "%$value%");
     }
 
-    public function scopeYear(Builder $query, $value)
+    /**
+     * @param Builder $query
+     * @param $value
+     * @return void
+     */
+    public function scopeYear(Builder $query, $value): void
     {
         $query->whereYear('created_at', $value);
     }
 
-    public function scopeMonth(Builder $query, $value)
+    /**
+     * @param Builder $query
+     * @param $value
+     * @return void
+     */
+    public function scopeMonth(Builder $query, $value): void
     {
         $query->whereMonth('created_at', $value);
     }
 
-    public function scopeSearch(Builder $query, $values)
+    /**
+     * @param Builder $query
+     * @param $values
+     * @return void
+     */
+    public function scopeSearch(Builder $query, $values): void
     {
         Str::of($values)->explode(' ')->each(function ($value) use ($query) {
             $query->orWhere('title', 'LIKE', "%$value%")

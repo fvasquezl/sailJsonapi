@@ -3,7 +3,7 @@
 use App\Models\Article;
 use Tests\TestCase;
 
-it('can fetch a single article', function () {
+it(description: 'can fetch a single article', closure: function () {
     /** @var TestCase $this */
     $article = Article::factory()->create();
 
@@ -33,7 +33,7 @@ it('can fetch a single article', function () {
         ]);
 });
 
-it('can fetch all articles', function () {
+it(description: 'can fetch all articles', closure: function () {
     /** @var TestCase $this */
     $articles = Article::factory()->count(3)->create();
 

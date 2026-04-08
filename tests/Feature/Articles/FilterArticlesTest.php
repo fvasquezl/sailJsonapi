@@ -3,7 +3,7 @@
 use App\Models\Article;
 use Tests\TestCase;
 
-it('can filter articles by title', function () {
+it(description: 'can filter articles by title', closure: function () {
 
     /** @var TestCase $this */
     Article::factory()->create([
@@ -25,7 +25,7 @@ it('can filter articles by title', function () {
         ->assertDontSee('Other Article');
 });
 
-it('can filter articles by content', function () {
+it(description: 'can filter articles by content', closure: function () {
 
     /** @var TestCase $this */
     Article::factory()->create([
@@ -44,7 +44,7 @@ it('can filter articles by content', function () {
         ->assertDontSee('Other Article');
 });
 
-it('can filter articles by year', function () {
+it(description: 'can filter articles by year', closure: function () {
 
     /** @var TestCase $this */
     Article::factory()->create([
@@ -64,7 +64,7 @@ it('can filter articles by year', function () {
         ->assertDontSee('Article from 2021');
 });
 
-it('can filter articles by month', function () {
+it(description: 'can filter articles by month', closure: function () {
 
     /** @var TestCase $this */
     Article::factory()->create([
@@ -91,7 +91,7 @@ it('can filter articles by month', function () {
         ->assertDontSee('Article from January');
 });
 
-it('cannot filter articles by unknown filters', function () {
+it(description: 'cannot filter articles by unknown filters', closure: function () {
 
     /** @var TestCase $this */
     Article::factory()->create();
@@ -101,7 +101,7 @@ it('cannot filter articles by unknown filters', function () {
     $this->jsonApi()->get($url)->assertStatus(400);
 });
 
-it('can search articles by title and conten', function () {
+it(description: 'can search articles by title and content', closure: function () {
 
     /** @var TestCase $this */
     Article::factory()->create([
@@ -127,7 +127,7 @@ it('can search articles by title and conten', function () {
         ->assertDontSee('Content 2');
 });
 
-it('can search articles by title and conten with multiple terms', function () {
+it(description: 'can search articles by title and conten with multiple terms', closure: function () {
 
     /** @var TestCase $this */
     Article::factory()->create([
