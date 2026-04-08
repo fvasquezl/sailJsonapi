@@ -1,6 +1,6 @@
 <?php
 
-namespace App\JsonApi\Authorizers;
+namespace App\JsonApi\V1\Categories;
 
 use Illuminate\Auth\Access\Response;
 use Illuminate\Http\Request;
@@ -8,83 +8,130 @@ use LaravelJsonApi\Contracts\Auth\Authorizer;
 
 class CategoryAuthorizer implements Authorizer
 {
+
     /**
      * Authorize the index controller action.
+     *
+     * @param Request $request
+     * @param string $modelClass
+     * @return bool|Response
      */
     public function index(Request $request, string $modelClass): bool|Response
     {
-        return true;
+        // TODO: Implement index() method.
     }
 
     /**
      * Authorize the store controller action.
+     *
+     * @param Request $request
+     * @param string $modelClass
+     * @return bool|Response
      */
     public function store(Request $request, string $modelClass): bool|Response
     {
-        return true;
+        return (bool) $request->user();
     }
 
     /**
      * Authorize the show controller action.
+     *
+     * @param Request $request
+     * @param object $model
+     * @return bool|Response
      */
     public function show(Request $request, object $model): bool|Response
     {
-        return true;
+        // TODO: Implement show() method.
     }
 
     /**
      * Authorize the update controller action.
+     *
+     * @param object $model
+     * @param Request $request
+     * @return bool|Response
      */
     public function update(Request $request, object $model): bool|Response
     {
-        return true;
+        return (bool) $request->user();
     }
 
     /**
      * Authorize the destroy controller action.
+     *
+     * @param Request $request
+     * @param object $model
+     * @return bool|Response
      */
     public function destroy(Request $request, object $model): bool|Response
     {
-        return true;
+        // TODO: Implement destroy() method.
     }
 
     /**
      * Authorize the show-related controller action
+     *
+     * @param Request $request
+     * @param object $model
+     * @param string $fieldName
+     * @return bool|Response
      */
     public function showRelated(Request $request, object $model, string $fieldName): bool|Response
     {
-        return true;
+        // TODO: Implement showRelated() method.
     }
 
     /**
      * Authorize the show-relationship controller action.
+     *
+     * @param Request $request
+     * @param object $model
+     * @param string $fieldName
+     * @return bool|Response
      */
     public function showRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        return true;
+        // TODO: Implement showRelationship() method.
     }
 
     /**
      * Authorize the update-relationship controller action.
+     *
+     * @param Request $request
+     * @param object $model
+     * @param string $fieldName
+     * @return bool|Response
      */
     public function updateRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        return true;
+        // TODO: Implement updateRelationship() method.
     }
 
     /**
      * Authorize the attach-relationship controller action.
+     *
+     * @param Request $request
+     * @param object $model
+     * @param string $fieldName
+     * @return bool|Response
      */
     public function attachRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        return true;
+        // TODO: Implement attachRelationship() method.
     }
 
     /**
      * Authorize the detach-relationship controller action.
+     *
+     * @param Request $request
+     * @param object $model
+     * @param string $fieldName
+     * @return bool|Response
      */
     public function detachRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        return true;
+        // TODO: Implement detachRelationship() method.
     }
+
 }

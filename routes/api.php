@@ -12,5 +12,5 @@ JsonApiRoute::server('v1')
                 $server->hasOne('authors')->except('replace');
             });
         $server->resource('authors', JsonApiController::class)->only('index', 'show');
-        $server->resource('categories', JsonApiController::class)->only('index', 'show');
+        $server->resource('categories', JsonApiController::class)->only('index', 'show','store','update');
     });
