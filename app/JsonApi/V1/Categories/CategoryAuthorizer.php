@@ -18,7 +18,7 @@ class CategoryAuthorizer implements Authorizer
      */
     public function index(Request $request, string $modelClass): bool|Response
     {
-        // TODO: Implement index() method.
+        return true;
     }
 
     /**
@@ -42,7 +42,7 @@ class CategoryAuthorizer implements Authorizer
      */
     public function show(Request $request, object $model): bool|Response
     {
-        // TODO: Implement show() method.
+        return true;
     }
 
     /**
@@ -66,7 +66,7 @@ class CategoryAuthorizer implements Authorizer
      */
     public function destroy(Request $request, object $model): bool|Response
     {
-        // TODO: Implement destroy() method.
+        return (bool) $request->user();
     }
 
     /**

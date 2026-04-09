@@ -14,7 +14,7 @@ it('guest users cannot create categories', function () {
             'type'=>'categories',
             'attributes'=>$category
             ])
-        ->post(route('api.v1.categories.store'))->dump()
+        ->post(route('api.v1.categories.store'))
         ->assertUnauthorized(); // 401
 
     $this->assertDatabaseMissing('categories', $category);
