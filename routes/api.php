@@ -12,5 +12,8 @@ JsonApiRoute::server('v1')
                 $server->hasOne('authors')->except('replace');
             });
         $server->resource('authors', JsonApiController::class)->only('index', 'show');
-        $server->resource('categories', JsonApiController::class);
+        $server->resource('categories', JsonApiController::class)
+        ->relationships(function ($server) {
+            $server->hasMany('articles')->except('replace');
+        });
     });

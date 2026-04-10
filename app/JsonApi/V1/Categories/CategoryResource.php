@@ -21,6 +21,8 @@ class CategoryResource extends JsonApiResource
     public function attributes($request): iterable
     {
         return [
+            'name' => $this->resource->name,
+            'slug' => $this->resource->slug,
             'createdAt' => $this->resource->created_at,
             'updatedAt' => $this->resource->updated_at,
         ];
@@ -35,7 +37,7 @@ class CategoryResource extends JsonApiResource
     public function relationships($request): iterable
     {
         return [
-            // @TODO
+            $this->relation('articles'),
         ];
     }
 
