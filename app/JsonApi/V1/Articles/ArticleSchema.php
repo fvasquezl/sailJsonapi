@@ -33,7 +33,7 @@ class ArticleSchema extends Schema
             Str::make('content')->sortable(),
             DateTime::make('createdAt')->sortable()->readOnly(),
             DateTime::make('updatedAt')->sortable()->readOnly(),
-            BelongsTo::make('category'),
+            BelongsTo::make('categories', 'category'),
             BelongsTo::make('authors', 'user')
                 ->type('authors'),
         ];

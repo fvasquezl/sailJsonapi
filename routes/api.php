@@ -9,11 +9,16 @@ JsonApiRoute::server('v1')
     ->resources(function ($server) {
         $server->resource('articles', ArticleController::class)
             ->relationships(function ($server) {
-                $server->hasOne('authors')->except('replace');
+                $server->hasOne('authors')->except('update');
+                $server->hasOne('categories')->except('update');
             });
-        $server->resource('authors', JsonApiController::class)->only('index', 'show');
+        $server->resource('authors', JsonApiController::class)
+            ->relationships(function ($server) {
+                $server->hasMany('articles')->except('update', 'attach', 'detach');
+            })->only('index', 'show');
+
         $server->resource('categories', JsonApiController::class)
-        ->relationships(function ($server) {
-            $server->hasMany('articles')->except('replace');
-        });
+            ->relationships(function ($server) {
+                $server->hasMany('articles')->except('update', 'attach', 'detach');
+            });
     });

@@ -29,7 +29,7 @@ trait CreateData
                 'content' => $this->article->content,
             ],
             'relationships' => [
-                'category' => [
+                'categories' => [
                     'data' => ['type' => 'categories', 'id' => (string) $this->category->getRouteKey()],
                 ],
                 'authors' => [

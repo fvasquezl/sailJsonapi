@@ -79,7 +79,7 @@ class CategoryAuthorizer implements Authorizer
      */
     public function showRelated(Request $request, object $model, string $fieldName): bool|Response
     {
-        // TODO: Implement showRelated() method.
+        return true;
     }
 
     /**
@@ -92,7 +92,7 @@ class CategoryAuthorizer implements Authorizer
      */
     public function showRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        // TODO: Implement showRelationship() method.
+        return true;
     }
 
     /**

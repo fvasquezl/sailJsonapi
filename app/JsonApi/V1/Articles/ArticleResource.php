@@ -12,7 +12,6 @@ use LaravelJsonApi\Core\Resources\JsonApiResource;
 class ArticleResource extends JsonApiResource
 {
 
-
     /**
      * Get the resource's attributes.
      *
@@ -38,7 +37,7 @@ class ArticleResource extends JsonApiResource
     public function relationships($request): iterable
     {
         return array_filter([
-            $this->relation('category'),
+            $this->relation('categories', 'category'),
             str_contains($request?->query('include', ''), 'authors')
                 ? $this->relation('authors', 'user')
                 : null,
