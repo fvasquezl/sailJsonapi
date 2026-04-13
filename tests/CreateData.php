@@ -14,13 +14,16 @@ trait CreateData
 
     public function jsonData(array $attributes = []): array
     {
-        $user = $attributes['user'] ?? User::factory()->create();
+        $relationships=[];
 
-        $relationships = [
-            'authors' => [
-                'data' => ['type' => 'authors', 'id' => (string) $user->getRouteKey()],
-            ],
-        ];
+        if (! empty($attributes['user'])) {
+            $user = $attributes['user'];
+            $relationships = [
+                'authors' => [
+                    'data' => ['type' => 'authors', 'id' => (string)$user->getRouteKey()],
+                ],
+            ];
+        }
 
         if (! empty($attributes['category'])) {
             $category = $attributes['category'];
@@ -28,6 +31,7 @@ trait CreateData
                 'data' => ['type' => 'categories', 'id' => (string) $category->getRouteKey()],
             ];
         }
+
 
         $this->article = Article::factory()->make(
             array_diff_key($attributes, ['user' => true, 'category' => true])

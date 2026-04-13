@@ -2,6 +2,7 @@
 
 // Pest
 use App\Models\Article;
+use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
@@ -26,8 +27,10 @@ it('guest users cannot update articles', function () {
 it('authenticated users can update their articles', function () {
 
     $article = Article::factory()->create();
+    $category = Category::factory()->create();
 
-    Sanctum::actingAs($article->user);
+
+    Sanctum::actingAs($user = $article->user);
 
     $this->jsonApi()
         ->withData([
@@ -38,6 +41,20 @@ it('authenticated users can update their articles', function () {
                 'slug' => 'slug-changed',
                 'content' => 'Content changed',
             ],
+            'relationships' => [
+                'authors' => [
+                    'data' => [
+                        'type' => 'authors',
+                        'id' => $user->getRouteKey(),
+                    ]
+                ],
+                'categories' => [
+                    'data' => [
+                        'type' => 'categories',
+                        'id' => $category->getRouteKey(),
+                    ]
+                ]
+            ]
         ])
         ->patch(route('api.v1.articles.update', $article))
         ->assertOK(); // 200

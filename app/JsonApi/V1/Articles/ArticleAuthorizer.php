@@ -22,7 +22,7 @@ class ArticleAuthorizer implements Authorizer
      */
     public function store(Request $request, string $modelClass): bool|Response
     {
-        return (bool) $request->user();
+        return Gate::inspect('store', $modelClass);
     }
 
     /**

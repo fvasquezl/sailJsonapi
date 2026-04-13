@@ -8,7 +8,11 @@ use Laravel\Sanctum\Sanctum;
 
 it('guest users cannot create articles', function () {
 
-    $article = $this->jsonData(['user' => null]);
+    $article = $this->jsonData(
+        [
+            'user' => User::factory()->create(),
+            'category' => Category::factory()->create()
+        ]);
 
     $this->jsonApi()
         ->withData($article)
@@ -28,6 +32,7 @@ it('authenticated users can create articles', function () {
         'user' => $user,
         'category' => $category,
     ]);
+
 
     $this->assertDatabaseMissing('articles', [
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
@@ -54,7 +59,76 @@ it('authenticated users can create articles', function () {
 });
 
 // Pest
-it('category is required', function () {
+it('authenticated users cannot create articles on behalf of other user', function () {
+
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+
+    $data = $this->jsonData([
+        'user' => $user,
+        'category' => $category,
+    ]);
+    $data['relationships']['authors']['data']['id'] = User::factory()->create()->getRouteKey();
+
+
+    $this->assertDatabaseMissing('articles', [
+        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+    ]);
+
+    Sanctum::actingAs($user);
+
+     $this->jsonApi()
+        ->withData($data)
+        ->post(route('api.v1.articles.store'))
+        ->assertForbidden();  //403 Prohibido
+
+    $this->assertDatabaseCount('articles', 0);
+});
+
+// Pest
+it('can have protection to mass assignment', function () {
+
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+
+    $data = $this->jsonData([
+        'user' => $user,
+        'category' => $category,
+    ]);
+
+    $data['attributes']['approved']= true;
+
+    Sanctum::actingAs($user);
+
+    $this->jsonApi()
+        ->withData($data)
+        ->post(route('api.v1.articles.store'))
+        ->assertStatus(400);
+});
+
+// Pest
+it('authors is required', function () {
+
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+
+    $data = $this->jsonData(['category' => $category]);
+
+
+    Sanctum::actingAs($user);
+
+    $this->jsonApi()
+        ->withData($data)
+        ->post(route('api.v1.articles.store'))
+        ->assertUnprocessable() // 422
+        ->assertJsonFragment(['source' => ['pointer' => '/data/relationships/authors']]);
+    $this->assertDatabaseMissing('articles', [
+        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+    ]);
+});
+
+// Pest
+it('categories is required', function () {
 
     $user = User::factory()->create();
     $data = $this->jsonData(['user' => $user]);
@@ -66,6 +140,29 @@ it('category is required', function () {
         ->post(route('api.v1.articles.store'))
         ->assertUnprocessable() // 422
         ->assertJsonFragment(['source' => ['pointer' => '/data/relationships/categories']]);
+    $this->assertDatabaseMissing('articles', [
+        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+    ]);
+});
+
+// Pest
+it('authors must be a relationship object', function () {
+
+    $category = Category::factory()->create();
+    $data = $this->jsonData(['category' => $category]);
+
+    $data['relationships']['authors'] = [
+        'data' => ['type' => 'categories', 'id' => '1'],
+    ];
+
+    Sanctum::actingAs(User::factory()->create());
+
+    $this->jsonApi()
+        ->withData($data)
+        ->post(route('api.v1.articles.store'))
+        ->assertStatus(422)  // documento bien formado, pero las reglas de validación del negocio no se cumplen
+        ->assertSee('data\/relationships\/authors');
+
     $this->assertDatabaseMissing('articles', [
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
     ]);
