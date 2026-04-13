@@ -16,7 +16,19 @@ trait CreateData
     {
         $user = $attributes['user'] ?? User::factory()->create();
 
-        $this->category = $attributes['category'] ?? Category::factory()->create();
+        $relationships = [
+            'authors' => [
+                'data' => ['type' => 'authors', 'id' => (string) $user->getRouteKey()],
+            ],
+        ];
+
+        if (! empty($attributes['category'])) {
+            $category = $attributes['category'];
+            $relationships['categories'] = [
+                'data' => ['type' => 'categories', 'id' => (string) $category->getRouteKey()],
+            ];
+        }
+
         $this->article = Article::factory()->make(
             array_diff_key($attributes, ['user' => true, 'category' => true])
         );
@@ -28,14 +40,7 @@ trait CreateData
                 'slug' => $this->article->slug,
                 'content' => $this->article->content,
             ],
-            'relationships' => [
-                'categories' => [
-                    'data' => ['type' => 'categories', 'id' => (string) $this->category->getRouteKey()],
-                ],
-                'authors' => [
-                    'data' => ['type' => 'authors', 'id' => (string) $user->getRouteKey()],
-                ],
-            ],
+            'relationships' => $relationships,
         ];
     }
 }

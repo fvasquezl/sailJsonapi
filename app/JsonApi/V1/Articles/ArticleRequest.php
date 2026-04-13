@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Rules\Slug;
 use Illuminate\Validation\Rule;
 use LaravelJsonApi\Laravel\Http\Requests\ResourceRequest;
+use LaravelJsonApi\Validation\Rules\HasOne;
 
 class ArticleRequest extends ResourceRequest
 {
@@ -25,7 +26,10 @@ class ArticleRequest extends ResourceRequest
             'title' => ['required', 'string'],
             'slug' => $slug,
             'content' => ['required', 'string'],
-            'categories' => ['required'],
+            'categories' => [
+                'required',
+                new HasOne($this->schema()),
+            ],
             'authors' => [$this->isCreating() ? 'required' : 'sometimes'],
         ];
     }

@@ -2,6 +2,7 @@
 
 // Pest
 use App\Models\Article;
+use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
@@ -21,9 +22,12 @@ it('guest users cannot create articles', function () {
 it('authenticated users can create articles', function () {
 
     $user = User::factory()->create();
+    $category = Category::factory()->create();
 
-    $data = $this->jsonData(['user' => $user]);
-
+    $data = $this->jsonData([
+        'user' => $user,
+        'category' => $category,
+    ]);
 
     $this->assertDatabaseMissing('articles', [
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
@@ -46,6 +50,47 @@ it('authenticated users can create articles', function () {
         'slug' => $this->article->slug,
         'content' => $this->article->content,
         'user_id' => $user->id,
+    ]);
+});
+
+// Pest
+it('category is required', function () {
+
+    $user = User::factory()->create();
+    $data = $this->jsonData(['user' => $user]);
+
+    Sanctum::actingAs($user);
+
+    $this->jsonApi()
+        ->withData($data)
+        ->post(route('api.v1.articles.store'))
+        ->assertUnprocessable() // 422
+        ->assertJsonFragment(['source' => ['pointer' => '/data/relationships/categories']]);
+    $this->assertDatabaseMissing('articles', [
+        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+    ]);
+});
+
+// Pest
+it('category must be a relationship object', function () {
+
+    $user = User::factory()->create();
+    $data = $this->jsonData(['user' => $user]);
+
+    $data['relationships']['categories'] = [
+        'data' => ['type' => 'authors', 'id' => '1'],
+    ];
+
+    Sanctum::actingAs($user);
+
+    $this->jsonApi()
+        ->withData($data)
+        ->post(route('api.v1.articles.store'))
+        ->assertUnprocessable() // 422
+        ->assertSee('data\/relationships\/categories');
+
+    $this->assertDatabaseMissing('articles', [
+        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
     ]);
 });
 
@@ -194,7 +239,6 @@ it('slug must not end with dashes', function () {
     $user = User::factory()->create();
 
     $data = $this->jsonData(['user' => $user, 'slug' => 'end-with-dash-']);
-
 
     Sanctum::actingAs($user);
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Article;
+use App\Models\Category;
 use Tests\TestCase;
 
 it(description: 'can filter articles by title', closure: function () {
@@ -157,4 +158,38 @@ it(description: 'can search articles by title and conten with multiple terms', c
         ->assertSee('Another Article')
         ->assertSee('Another Laravel Article')
         ->assertDontSee('Content 2');
+});
+
+/**
+ * localhost/api/v1/articles/?filter[categories]=cat-1
+ **/
+it(description: 'can filter articles by categories', closure: function () {
+
+    Article::factory()->count(2)->create();
+
+    $category = Category::factory()->hasArticles(2)->create();
+
+    $this->jsonApi()
+        ->filter(['categories' => $category->getRouteKey()])
+        ->get(route('api.v1.articles.index'))
+        ->assertJsonCount(2, 'data');
+
+});
+
+/**
+ * localhost/api/v1/articles/?filter[categories]=voluptate-et-iusto-repellendus-sapiente-vitae-ipsa-maiores,quos-temporibus-et-possimus-molestiae-quos
+ **/
+it(description: 'can filter articles by multiple categories', closure: function () {
+
+    Article::factory()->count(2)->create();
+
+    $category = Category::factory()->hasArticles(2)->create();
+    $category2 = Category::factory()->hasArticles(3)->create();
+
+    $this->jsonApi()
+        ->filter([
+            'categories' => $category->getRouteKey().','.$category2->getRouteKey(),
+        ])
+        ->get(route('api.v1.articles.index'))
+        ->assertJsonCount(5, 'data');
 });

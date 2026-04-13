@@ -20,7 +20,6 @@ class ArticleSchema extends Schema
      */
     public static string $model = Article::class;
 
-
     /**
      * Get the resource fields.
      */
@@ -51,6 +50,7 @@ class ArticleSchema extends Schema
             Scope::make('year'),
             Scope::make('month'),
             Scope::make('search'),
+            Scope::make('categories'),
         ];
     }
 

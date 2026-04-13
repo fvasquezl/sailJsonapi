@@ -2,18 +2,15 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
-
 class Article extends Model
 {
     use HasFactory;
-
 
     /**
      * The attributes that aren't mass assignable.
@@ -21,7 +18,6 @@ class Article extends Model
      * @var array<string>
      */
     protected $guarded = [];
-
 
     /**
      * Get the attributes that should be cast.
@@ -37,83 +33,53 @@ class Article extends Model
         ];
     }
 
-    /**
-     * @return string
-     */
     public function getRouteKeyName(): string
     {
         return 'slug';
     }
 
-    /**
-     * @return BelongsTo
-     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
-    /**
-     * @return BelongsTo
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * @param Builder $query
-     * @param $value
-     * @return void
-     */
     public function scopeTitle(Builder $query, $value): void
     {
         $query->where('title', 'LIKE', "%$value%");
     }
 
-    /**
-     * @param Builder $query
-     * @param $value
-     * @return void
-     */
     public function scopeContent(Builder $query, $value): void
     {
         $query->where('content', 'LIKE', "%$value%");
     }
 
-    /**
-     * @param Builder $query
-     * @param $value
-     * @return void
-     */
     public function scopeYear(Builder $query, $value): void
     {
         $query->whereYear('created_at', $value);
     }
 
-    /**
-     * @param Builder $query
-     * @param $value
-     * @return void
-     */
     public function scopeMonth(Builder $query, $value): void
     {
         $query->whereMonth('created_at', $value);
     }
 
-    /**
-     * @param Builder $query
-     * @param $values
-     * @return void
-     */
     public function scopeSearch(Builder $query, $values): void
     {
         Str::of($values)->explode(' ')->each(function ($value) use ($query) {
             $query->orWhere('title', 'LIKE', "%$value%")
                 ->orWhere('content', 'LIKE', "%$value%");
         });
-
-
     }
 
+    public function scopeCategories(Builder $query, $values): void
+    {
+        $query->whereHas('category', function ($q) use ($values) {
+            $q->whereIn('slug', explode(',', $values));
+        });
+    }
 }
