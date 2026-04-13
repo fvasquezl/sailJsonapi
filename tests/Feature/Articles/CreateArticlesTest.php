@@ -38,7 +38,7 @@ it('authenticated users can create articles', function () {
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
     ]);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['articles:store']);
 
     $response = $this->jsonApi()
         ->withData($data)
@@ -56,6 +56,29 @@ it('authenticated users can create articles', function () {
         'content' => $this->article->content,
         'user_id' => $user->id,
     ]);
+});
+
+// Pest
+it('authenticated users cannot create articles without permissions', function () {
+
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+
+    $data = $this->jsonData([
+        'user' => $user,
+        'category' => $category,
+    ]);
+
+
+    Sanctum::actingAs($user);
+
+    $this->jsonApi()
+        ->withData($data)
+        ->post(route('api.v1.articles.store'))
+        ->assertStatus(403);  // Forbidden
+
+
+    $this->assertDatabaseCount('articles', 0);
 });
 
 // Pest
@@ -133,7 +156,7 @@ it('categories is required', function () {
     $user = User::factory()->create();
     $data = $this->jsonData(['user' => $user]);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['*']);
 
     $this->jsonApi()
         ->withData($data)
@@ -197,7 +220,7 @@ it('title is required', function () {
     $user = User::factory()->create();
     $data = $this->jsonData(['user' => $user, 'title' => '']);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['*']);
 
     $this->jsonApi()
         ->withData($data)
@@ -216,7 +239,7 @@ it('content is required', function () {
     $user = User::factory()->create();
     $data = $this->jsonData(['user' => $user, 'content' => '']);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['*']);
 
     $this->jsonApi()
         ->withData($data)
@@ -235,7 +258,7 @@ it('slug is required', function () {
     $user = User::factory()->create();
     $data = $this->jsonData(['user' => $user, 'slug' => '']);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['*']);
 
     $this->jsonApi()
         ->withData($data)
@@ -257,7 +280,7 @@ it('slug must be unique', function () {
 
     $data = $this->jsonData(['user' => $user, 'slug' => 'same-slug']);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['*']);
 
     $this->jsonApi()
         ->withData($data)
@@ -275,7 +298,7 @@ it('slug must only contain letters numbers and dashes', function () {
 
     $data = $this->jsonData(['user' => $user, 'slug' => '%$%#@']);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['*']);
 
     $this->jsonApi()
         ->withData($data)
@@ -295,7 +318,7 @@ it('slug must not contain underscores', function () {
 
     $data = $this->jsonData(['user' => $user, 'slug' => 'with_underscores']);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['*']);
 
     $this->jsonApi()
         ->withData($data)
@@ -316,7 +339,7 @@ it('slug must not start with dashes', function () {
 
     $data = $this->jsonData(['user' => $user, 'slug' => '-start-with-dash']);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['*']);
 
     $this->jsonApi()
         ->withData($data)
@@ -337,7 +360,7 @@ it('slug must not end with dashes', function () {
 
     $data = $this->jsonData(['user' => $user, 'slug' => 'end-with-dash-']);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['*']);
 
     $this->jsonApi()
         ->withData($data)

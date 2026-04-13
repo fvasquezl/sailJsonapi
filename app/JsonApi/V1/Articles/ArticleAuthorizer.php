@@ -22,7 +22,15 @@ class ArticleAuthorizer implements Authorizer
      */
     public function store(Request $request, string $modelClass): bool|Response
     {
-        return Gate::inspect('store', $modelClass);
+        if (!$request->user()) {
+            return false;
+         }
+
+        if ($request->has('data.relationships.authors')) {
+            return Gate::inspect('store', $modelClass);
+        }
+
+        return true;
     }
 
     /**
