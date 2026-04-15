@@ -9,7 +9,7 @@ it(description: 'can fetch a single article', closure: function () {
 
     $this->jsonApi()->get(route('api.v1.articles.show', $article))
         ->assertOk()
-        ->assertJson([
+        ->assertJson(value: [
             'data' => [
                 'type' => 'articles',
                 'id' => (string) $article->getRouteKey(),

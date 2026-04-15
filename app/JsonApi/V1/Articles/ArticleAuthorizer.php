@@ -5,6 +5,7 @@ namespace App\JsonApi\V1\Articles;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use LaravelJsonApi\Contracts\Auth\Authorizer;
 
 class ArticleAuthorizer implements Authorizer
@@ -78,7 +79,8 @@ class ArticleAuthorizer implements Authorizer
      */
     public function updateRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        return false;
+        $ability=Str::camel('update-'. $fieldName);
+        return Gate::inspect($ability, $model);
     }
 
     /**

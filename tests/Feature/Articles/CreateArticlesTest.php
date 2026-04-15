@@ -5,6 +5,7 @@ use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
 
 it('guest users cannot create articles', function () {
 
@@ -19,11 +20,15 @@ it('guest users cannot create articles', function () {
         ->post(route('api.v1.articles.store'))
         ->assertUnauthorized(); // 401
 
-    $this->assertDatabaseMissing('articles', $article);
+    expect(Article::count())->toBe(0);
+
 });
 
 // Pest
 it('authenticated users can create articles', function () {
+
+
+    /** @var TestCase $this */
 
     $user = User::factory()->create();
     $category = Category::factory()->create();
@@ -61,6 +66,7 @@ it('authenticated users can create articles', function () {
 // Pest
 it('authenticated users cannot create articles without permissions', function () {
 
+
     $user = User::factory()->create();
     $category = Category::factory()->create();
 
@@ -84,6 +90,7 @@ it('authenticated users cannot create articles without permissions', function ()
 // Pest
 it('authenticated users cannot create articles on behalf of other user', function () {
 
+
     $user = User::factory()->create();
     $category = Category::factory()->create();
 
@@ -98,7 +105,7 @@ it('authenticated users cannot create articles on behalf of other user', functio
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
     ]);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($user, ['articles:create']);
 
      $this->jsonApi()
         ->withData($data)
@@ -110,6 +117,7 @@ it('authenticated users cannot create articles on behalf of other user', functio
 
 // Pest
 it('can have protection to mass assignment', function () {
+
 
     $user = User::factory()->create();
     $category = Category::factory()->create();
@@ -132,6 +140,7 @@ it('can have protection to mass assignment', function () {
 // Pest
 it('authors is required', function () {
 
+
     $user = User::factory()->create();
     $category = Category::factory()->create();
 
@@ -153,6 +162,7 @@ it('authors is required', function () {
 // Pest
 it('categories is required', function () {
 
+
     $user = User::factory()->create();
     $data = $this->jsonData(['user' => $user]);
 
@@ -170,6 +180,7 @@ it('categories is required', function () {
 
 // Pest
 it('authors must be a relationship object', function () {
+
 
     $category = Category::factory()->create();
     $data = $this->jsonData(['category' => $category]);
@@ -194,6 +205,7 @@ it('authors must be a relationship object', function () {
 // Pest
 it('category must be a relationship object', function () {
 
+
     $user = User::factory()->create();
     $data = $this->jsonData(['user' => $user]);
 
@@ -217,6 +229,7 @@ it('category must be a relationship object', function () {
 // Pest
 it('title is required', function () {
 
+
     $user = User::factory()->create();
     $data = $this->jsonData(['user' => $user, 'title' => '']);
 
@@ -235,6 +248,7 @@ it('title is required', function () {
 
 // Pest
 it('content is required', function () {
+
 
     $user = User::factory()->create();
     $data = $this->jsonData(['user' => $user, 'content' => '']);
@@ -255,6 +269,7 @@ it('content is required', function () {
 // Pest
 it('slug is required', function () {
 
+
     $user = User::factory()->create();
     $data = $this->jsonData(['user' => $user, 'slug' => '']);
 
@@ -273,6 +288,7 @@ it('slug is required', function () {
 
 // Pest
 it('slug must be unique', function () {
+
 
     $user = User::factory()->create();
 
@@ -294,6 +310,7 @@ it('slug must be unique', function () {
 // Pest
 it('slug must only contain letters numbers and dashes', function () {
 
+
     $user = User::factory()->create();
 
     $data = $this->jsonData(['user' => $user, 'slug' => '%$%#@']);
@@ -313,6 +330,7 @@ it('slug must only contain letters numbers and dashes', function () {
 
 // Pest
 it('slug must not contain underscores', function () {
+
 
     $user = User::factory()->create();
 
@@ -335,6 +353,7 @@ it('slug must not contain underscores', function () {
 // Pest
 it('slug must not start with dashes', function () {
 
+
     $user = User::factory()->create();
 
     $data = $this->jsonData(['user' => $user, 'slug' => '-start-with-dash']);
@@ -355,6 +374,7 @@ it('slug must not start with dashes', function () {
 
 // Pest
 it('slug must not end with dashes', function () {
+
 
     $user = User::factory()->create();
 

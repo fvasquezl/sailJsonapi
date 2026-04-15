@@ -18,11 +18,24 @@ it('authenticated users can delete their articles', function () {
 
     $article = Article::factory()->create();
 
-    Sanctum::actingAs($article->user);
+    Sanctum::actingAs($article->user,['articles:delete']);
 
     $this->jsonApi()
         ->delete(route('api.v1.articles.destroy', $article))
         ->assertNoContent(); // 204
+
+});
+
+it('authenticated users can delete their articles without permissions', function () {
+
+
+    $article = Article::factory()->create();
+
+    Sanctum::actingAs($article->user);
+
+    $this->jsonApi()
+        ->delete(route('api.v1.articles.destroy', $article))
+        ->assertForbidden(); //403
 
 });
 
