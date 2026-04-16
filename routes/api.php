@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\LoginController;
+use App\Http\Controllers\Api\RegisterController;
 use App\Http\Controllers\Api\V1\ArticleController;
 use Illuminate\Support\Facades\Route;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
@@ -11,6 +12,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     Route::post('logout', [LoginController::class, 'logout'])->name('logout')
         ->middleware('auth:sanctum');
+
+    Route::post('register', [RegisterController::class, 'register'])->name('register')
+        ;
 });
 
 JsonApiRoute::server('v1')

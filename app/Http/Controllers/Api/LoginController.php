@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Responses\TokenResponse;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -30,9 +31,7 @@ class LoginController extends Controller
             ]);
         }
 
-        return response()->json([
-            'plain-text-token' => $user->createToken($request->device_name)->plainTextToken,
-        ]);
+        return new TokenResponse($user);
     }
 
     public function logout(Request $request)
