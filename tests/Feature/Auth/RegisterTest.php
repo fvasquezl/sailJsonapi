@@ -3,6 +3,7 @@
 // Pest
 use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 it('can register', function () {
@@ -26,6 +27,13 @@ it('can register', function () {
         'name' => 'Faustino Vasquez',
         'email' => 'fvasquez@local.com',
     ]);
+});
+
+it('cannot register twice', function () {
+
+    Sanctum::actingAs(User::factory()->create());
+    $this->postJson(route('api.v1.register'))
+        ->assertNoContent(); // 204
 });
 
 it('name is required', function () {
@@ -99,4 +107,3 @@ it('device_name is required', function () {
         'password' => 'password',
     ])->assertJsonValidationErrors('device_name');
 });
-
