@@ -1,64 +1,214 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# sailJsonapi
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Proyecto de aprendizaje: API REST siguiendo la especificación [JSON:API](https://jsonapi.org/) con Laravel 13 y Sanctum.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Paquete | Versión |
+|---------|---------|
+| PHP | 8.5 |
+| Laravel | 13 |
+| laravel-json-api/laravel | 5.1 |
+| Laravel Sanctum | 4 |
+| Pest | 4 |
+| Laravel Sail | 1 |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Levantar el proyecto
 
 ```bash
-composer require laravel/boost --dev
+# Instalar dependencias
+vendor/bin/sail composer install
 
-php artisan boost:install
+# Copiar variables de entorno
+cp .env.example .env
+
+# Generar clave
+vendor/bin/sail artisan key:generate
+
+# Ejecutar migraciones con seeders
+vendor/bin/sail artisan migrate --seed
+
+# Levantar contenedores
+vendor/bin/sail up -d
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Correr tests
 
-## Contributing
+```bash
+# Todos los tests
+vendor/bin/sail artisan test --compact
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Un archivo específico
+vendor/bin/sail artisan test --compact tests/Feature/Auth/RegisterTest.php
 
-## Code of Conduct
+# Filtrar por nombre
+vendor/bin/sail artisan test --compact --filter="can register"
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Endpoints de autenticación
 
-## Security Vulnerabilities
+| Método | Ruta | Middleware | Descripción |
+|--------|------|------------|-------------|
+| `POST` | `/api/v1/register` | `guest:sanctum` | Registrar nuevo usuario |
+| `POST` | `/api/v1/login` | — | Iniciar sesión |
+| `POST` | `/api/v1/logout` | `auth:sanctum` | Cerrar sesión |
+| `GET` | `/api/v1/user` | `auth:sanctum` | Usuario autenticado |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Registro
 
-## License
+```json
+POST /api/v1/register
+{
+    "name": "Faustino Vasquez",
+    "email": "fvasquez@example.com",
+    "password": "password",
+    "password_confirmation": "password",
+    "device_name": "Mi dispositivo"
+}
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Respuesta: token Sanctum en `plain-text-token`.
 
-    "better-pest.docker.enable": true,
-    "better-pest.docker.command": "./vendor/bin/sail exec -T laravel.test",
-    "better-pest.docker.paths": {
-        "/home/fvasquez/Code/Sail/jsonapi": "/var/www/html"
-    },
+Si el usuario ya está autenticado, devuelve `204 No Content`.
+
+### Login
+
+```json
+POST /api/v1/login
+{
+    "email": "fvasquez@example.com",
+    "password": "password",
+    "device_name": "Mi dispositivo"
+}
+```
+
+Si ya hay sesión activa, devuelve `204 No Content`.
+
+### Logout
+
+```
+POST /api/v1/logout
+Authorization: Bearer {token}
+```
+
+Elimina el token actual. Devuelve `204 No Content`.
+
+## Recursos JSON:API
+
+Base URL: `/api/v1`
+
+### Articles
+
+| Método | Ruta | Auth requerida | Descripción |
+|--------|------|----------------|-------------|
+| `GET` | `/articles` | No | Listar artículos |
+| `GET` | `/articles/{slug}` | No | Ver artículo |
+| `POST` | `/articles` | Sí | Crear artículo |
+| `PATCH` | `/articles/{slug}` | Sí (dueño) | Actualizar artículo |
+| `DELETE` | `/articles/{slug}` | Sí (dueño) | Eliminar artículo |
+
+**Relaciones:**
+- `GET /articles/{slug}/authors` — autor del artículo
+- `GET /articles/{slug}/categories` — categoría del artículo
+
+**Filtros disponibles:** `title`, `content`, `year`, `month`, `search`, `categories`
+
+**Ordenamiento:** `title`, `content`, `created_at`
+
+**Includes:** `?include=authors`, `?include=categories`
+
+### Authors
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/authors` | Listar autores |
+| `GET` | `/authors/{id}` | Ver autor |
+| `GET` | `/authors/{id}/articles` | Artículos del autor |
+
+### Categories
+
+| Método | Ruta | Auth requerida | Descripción |
+|--------|------|----------------|-------------|
+| `GET` | `/categories` | No | Listar categorías |
+| `GET` | `/categories/{slug}` | No | Ver categoría |
+| `POST` | `/categories` | Sí | Crear categoría |
+| `PATCH` | `/categories/{slug}` | Sí (dueño) | Actualizar categoría |
+| `DELETE` | `/categories/{slug}` | Sí (dueño) | Eliminar categoría |
+
+## Modelos y relaciones
+
+```
+User ──< Article >── Category
+```
+
+- `User` tiene muchos `Article`
+- `Article` pertenece a `User` (autor) y a `Category`
+- `Category` tiene muchos `Article`
+- `Article` usa `slug` como route key
+
+## Autorización
+
+La autorización se implementa con `Authorizer` + `Policy` por recurso:
+
+- **Articles**: `ArticleAuthorizer` + `ArticlePolicy` — solo el dueño puede actualizar/eliminar.
+- **Categories**: `CategoryAuthorizer` — solo el dueño puede actualizar/eliminar.
+
+Las acciones públicas (`index`, `show`) no requieren autenticación.
+
+## Estructura relevante
+
+```
+app/
+  Http/
+    Controllers/Api/
+      RegisterController.php
+      LoginController.php
+      UserController.php
+      V1/ArticleController.php
+    Middleware/
+      RedirectIfAuthenticated.php   # devuelve 204 para JSON cuando ya hay sesión
+    Responses/
+      TokenResponse.php
+  JsonApi/V1/
+    Articles/
+      ArticleSchema.php
+      ArticleResource.php
+      ArticleRequest.php
+      ArticleQuery.php
+      ArticleAuthorizer.php
+    Authors/
+      AuthorSchema.php
+      AuthorResource.php
+      AuthorQuery.php
+    Categories/
+      CategorySchema.php
+      CategoryResource.php
+      CategoryRequest.php
+      CategoryAuthorizer.php
+    Server.php
+  Models/
+    User.php
+    Article.php
+    Category.php
+  Policies/
+    ArticlePolicy.php
+
+tests/Feature/
+  Auth/         # Register, Login, Logout, AuthenticatedUser
+  Articles/     # List, Create, Update, Delete, Sort, Paginate, Filter, Include
+  Authors/      # List, IncludeArticles
+  Categories/   # List, Create, Update, Delete, IncludeArticles
+```
+
+## Ramas y checkpoints
+
+| Rama / Tag | Descripción |
+|------------|-------------|
+| `main` | Rama principal |
+| `v1.0-sanctum-auth` | Checkpoint: auth con Sanctum completa (registro, login, logout, usuario) |
+| `feature/simple-permissions` | Trabajo en progreso: sistema de permisos simples |
+
+Para volver al checkpoint de auth:
+```bash
+git checkout v1.0-sanctum-auth
+```
