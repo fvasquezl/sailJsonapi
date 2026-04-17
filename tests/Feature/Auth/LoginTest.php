@@ -2,6 +2,7 @@
 
 
 // Pest
+use App\Models\Permission;
 use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -18,9 +19,37 @@ it('can login with valid credentials', function () {
     $token = $response->json('plain-text-token');
 
    $this->assertNotNull(
-       PersonalAccessToken::findToken($token),
+       $dbToken = PersonalAccessToken::findToken($token),
        'The plain text token is invalid'
    );
+
+});
+
+it('user permissions are assigned as abilities to the token response', function () {
+
+    $user = User::factory()->create();
+    $permission1 = Permission::factory()->create([
+        'name' => $articlesCreatePermission = 'articles:create'
+    ]);
+    $permission2 = Permission::factory()->create([
+        'name' => $articlesUpdatePermission = 'articles:update'
+    ]);
+
+    $user->givePermissionTo($permission1);
+    $user->givePermissionTo($permission2);
+
+    $response = $this->postJson(route('api.v1.login'), [
+        'email' => $user->email,
+        'password' => 'password',
+        'device_name' => 'iPhone de '.$user->name,
+    ]);
+
+    $dbToken = PersonalAccessToken::findToken($response->json('plain-text-token'));
+
+
+   $this->assertTrue($dbToken->can($articlesCreatePermission));
+   $this->assertTrue($dbToken->can($articlesUpdatePermission));
+   $this->assertFalse($dbToken->can('articles:delete'));
 
 });
 
