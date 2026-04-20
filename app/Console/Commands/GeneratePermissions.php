@@ -2,10 +2,11 @@
 
 namespace App\Console\Commands;
 
-use App\JsonApi\V1\Server;
+use App\Models\Permission;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use LaravelJsonApi\Core\Facades\JsonApi;
 
 #[Signature('generate:permissions')]
 #[Description('Generate permissions for registered api resources')]
@@ -16,17 +17,18 @@ class GeneratePermissions extends Command
      */
     public function handle()
     {
-        $abilities = [
-            'create',
-            'view',
-            'update',
-            'delete',
-        ];
 
-        $server = new Server(app(), 'v1');
-        $resources = collect($server->schemas()->types())->toArray();
+        $server = JsonApi::server('v1');
 
-        dd($resources);
+        $schemas = collect($server->schemas()->types())->toArray();
+        foreach ($schemas as $schema) {
+            foreach (Permission::$abilities as $ability) {
+                Permission::firstOrCreate([
+                    'name' => "$schema:$ability",
+                ]);
+            }
+
+        }
 
         $this->comment('Permissions generated!');
     }

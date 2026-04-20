@@ -30,13 +30,14 @@ it('can register', function () {
 });
 
 it('cannot register twice', function () {
-
+    /** @var TestCase $this */
     Sanctum::actingAs(User::factory()->create());
     $this->postJson(route('api.v1.register'))
         ->assertNoContent(); // 204
 });
 
 it('name is required', function () {
+    /** @var TestCase $this */
     $this->postJson(route('api.v1.register'), [
         'name' => '',
         'email' => 'fvasquez@local.com',
@@ -48,6 +49,7 @@ it('name is required', function () {
 });
 
 it('email is required', function () {
+    /** @var TestCase $this */
     $this->postJson(route('api.v1.register'), [
         'name' => 'Faustino Vasquez',
         'email' => '',
@@ -58,6 +60,7 @@ it('email is required', function () {
 });
 
 it('email is valid', function () {
+    /** @var TestCase $this */
     $this->postJson(route('api.v1.register'), [
         'name' => 'Faustino Vasquez',
         'email' => 'invalid-email',
@@ -68,7 +71,7 @@ it('email is valid', function () {
 });
 
 it('email must be unique', function () {
-
+    /** @var TestCase $this */
     $user = User::factory()->create();
 
     $this->postJson(route('api.v1.register'), [
@@ -81,6 +84,7 @@ it('email must be unique', function () {
 });
 
 it('password is required', function () {
+    /** @var TestCase $this */
     $this->postJson(route('api.v1.register'), [
         'name' => 'Faustino Vasquez',
         'email' => 'fvasquez@local.com',
@@ -91,7 +95,7 @@ it('password is required', function () {
 });
 
 it('password must be confirmed', function () {
-
+    /** @var TestCase $this */
     $this->postJson(route('api.v1.register'), [
         'email' => 'fvasquez@local.com',
         'device_name' => 'Dispositivo de Faustino',
@@ -101,6 +105,7 @@ it('password must be confirmed', function () {
 });
 
 it('device_name is required', function () {
+    /** @var TestCase $this */
     $this->postJson(route('api.v1.register'), [
         'email' => 'fvasquez@local.com',
         'device_name' => '',

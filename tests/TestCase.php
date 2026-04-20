@@ -7,5 +7,7 @@ use LaravelJsonApi\Testing\MakesJsonApiRequests;
 
 abstract class TestCase extends BaseTestCase
 {
-    use CreateData, MakesJsonApiRequests;
+    use CreateData, MakesJsonApiRequests {
+        MakesJsonApiRequests::jsonApi as public;
+    }
 }

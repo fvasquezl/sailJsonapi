@@ -1,11 +1,11 @@
 <?php
 
-
 // Pest
 use App\Models\Article;
+use Tests\TestCase;
 
 it('can include authors', function () {
-
+    /** @var TestCase $this */
     $article = Article::factory()->create();
 
     $this->jsonApi()
@@ -21,13 +21,10 @@ it('can include authors', function () {
 });
 
 it('can get the related author', function () {
-
+    /** @var TestCase $this */
     $article = Article::factory()->create();
 
     $this->jsonApi()
         ->get(route('api.v1.articles.authors', $article))
         ->assertSee($article->user->name);
 });
-
-
-

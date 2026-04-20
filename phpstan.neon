@@ -1,8 +1,18 @@
 includes:
     - vendor/larastan/larastan/extension.neon
+    - vendor/imsuperlative/phpstan-pest/extension.neon
 
 parameters:
     paths:
         - app
+        - tests
 
     level: 5
+
+    PhpstanPest:
+        testCaseClass: Tests\TestCase
+
+    ignoreErrors:
+        -
+            identifier: method.protected
+            path: tests/*

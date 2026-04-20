@@ -1,14 +1,14 @@
 <?php
 
 use App\Models\Article;
+use Tests\TestCase;
 
 /**
  * http://localhost/api/v1/articles?include=categories
  * http://localhost/api/v1/articles/category-slug?include=categories
  */
-
 it('can include categories', function () {
-
+    /** @var TestCase $this */
     $article = Article::factory()->create();
 
     $this->jsonApi()
@@ -24,7 +24,7 @@ it('can include categories', function () {
 });
 
 it('can fetch related categories', function () {
-
+    /** @var TestCase $this */
     $article = Article::factory()->create();
 
     $this->jsonApi()

@@ -12,7 +12,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -37,12 +36,17 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * @return HasMany<Article, $this>
+     */
     public function articles(): HasMany
     {
         return $this->hasMany(Article::class);
     }
 
-
+    /**
+     * @return BelongsToMany<Permission, $this>
+     */
     public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class);
@@ -52,5 +56,4 @@ class User extends Authenticatable
     {
         $this->permissions()->syncWithoutDetaching($permission);
     }
-
 }
