@@ -22,14 +22,16 @@ class GeneratePermissions extends Command
 
         $schemas = collect($server->schemas()->types())->toArray();
         foreach ($schemas as $schema) {
+            $this->comment("Permissions for $schema");
             foreach (Permission::$abilities as $ability) {
                 Permission::firstOrCreate([
-                    'name' => "$schema:$ability",
+                    'name' => $name = "$schema:$ability",
                 ]);
+                $this->line("$name");
             }
 
         }
 
-        $this->comment('Permissions generated!');
+        $this->info('Permissions generated!');
     }
 }

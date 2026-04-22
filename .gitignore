@@ -1,4 +1,6 @@
 *.log
+/testing
+/testing_test_*
 .DS_Store
 .env
 .env.backup
