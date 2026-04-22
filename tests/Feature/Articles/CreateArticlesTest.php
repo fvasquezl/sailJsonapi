@@ -24,6 +24,22 @@ it('guest users cannot create articles', function () {
 
 });
 
+it('returns json errors when no data is sent', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
+
+    Sanctum::actingAs($user, ['articles:store']);
+
+    $this->jsonApi()
+        ->post(route('api.v1.articles.store'))
+        ->assertStatus(422)
+        ->assertJson([
+            'errors' => [
+                ['source' => ['pointer' => '/data']],
+            ],
+        ]);
+});
+
 // Pest
 it('authenticated users can create articles', function () {
 
