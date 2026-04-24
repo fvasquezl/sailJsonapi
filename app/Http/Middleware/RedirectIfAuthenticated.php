@@ -17,6 +17,7 @@ class RedirectIfAuthenticated extends Middleware
      */
     public function handle(Request $request, Closure $next, string ...$guards): Response
     {
+
         $guards = empty($guards) ? [null] : $guards;
 
         foreach ($guards as $guard) {
@@ -24,6 +25,7 @@ class RedirectIfAuthenticated extends Middleware
                 if ($request->expectsJson()) {
                     return response()->noContent(); // 204
                 }
+
 
                 return redirect($this->redirectTo($request));
             }

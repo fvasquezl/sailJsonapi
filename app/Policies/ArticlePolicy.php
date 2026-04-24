@@ -7,19 +7,18 @@ use App\Models\User;
 
 class ArticlePolicy
 {
-
-//    public function before(User $user)
-//    {
-//        if($user->tokenCan('articles:admin')) {
-//            return true;
-//        }
-//    }
+    //    public function before(User $user)
+    //    {
+    //        if($user->tokenCan('articles:admin')) {
+    //            return true;
+    //        }
+    //    }
 
     public function store(User $user): bool
     {
 
         return $user->tokenCan('articles:store') &&
-            (string)$user->getRouteKey() === (string) request()->input('data.relationships.authors.data.id');
+            (string) $user->getRouteKey() === (string) request()->input('data.relationships.authors.data.id');
 
     }
 

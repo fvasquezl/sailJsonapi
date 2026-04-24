@@ -10,9 +10,6 @@ use LaravelJsonApi\Validation\Rules\HasOne;
 
 class ArticleRequest extends ResourceRequest
 {
-
-
-
     /**
      * Get the validation rules for the resource.
      */
@@ -30,13 +27,13 @@ class ArticleRequest extends ResourceRequest
             'slug' => $slug,
             'content' => ['required', 'string'],
             'categories' => [
-                [ $this->isCreating() ? 'required' : 'sometimes'],
+                [$this->isCreating() ? 'required' : 'sometimes'],
                 new HasOne($this->schema()),
             ],
-            'authors' =>[
-                [ $this->isCreating() ? 'required' : 'sometimes'],
+            'authors' => [
+                [$this->isCreating() ? 'required' : 'sometimes'],
                 new HasOne($this->schema()),
-            ]
+            ],
         ];
     }
 }

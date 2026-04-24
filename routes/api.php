@@ -28,11 +28,24 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 JsonApiRoute::server('v1')
     ->name('api.v1.')
     ->resources(function ($server) {
+        // Articles — lectura pública
         $server->resource('articles', ArticleController::class)
+            ->only('index', 'show')
             ->relationships(function ($server) {
                 $server->hasOne('authors');
                 $server->hasOne('categories');
             });
+
+        // Articles — escritura protegida con Sanctum
+        $server->resource('articles', ArticleController::class)
+            ->except('index', 'show')
+            ->middleware('auth:sanctum')
+            ->relationships(function ($server) {
+                $server->hasOne('authors');
+                $server->hasOne('categories');
+            });
+
+        // Authors — solo lectura
         $server->resource('authors', JsonApiController::class)
             ->relationships(function ($server) {
                 $server->hasMany('articles')->except('update', 'attach', 'detach');

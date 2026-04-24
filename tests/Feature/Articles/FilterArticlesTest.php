@@ -2,6 +2,7 @@
 
 use App\Models\Article;
 use App\Models\Category;
+use App\Models\User;
 use Tests\TestCase;
 
 it(description: 'can filter articles by title', closure: function () {
@@ -176,6 +177,7 @@ it(description: 'can filter articles by categories', closure: function () {
 
 });
 
+
 /**
  * localhost/api/v1/articles/?filter[categories]=voluptate-et-iusto-repellendus-sapiente-vitae-ipsa-maiores,quos-temporibus-et-possimus-molestiae-quos
  **/
@@ -189,6 +191,36 @@ it(description: 'can filter articles by multiple categories', closure: function 
     $this->jsonApi()
         ->filter([
             'categories' => $category->getRouteKey().','.$category2->getRouteKey(),
+        ])
+        ->get(route('api.v1.articles.index'))
+        ->assertJsonCount(5, 'data');
+});
+
+
+it(description: 'can filter articles by authors', closure: function () {
+
+    $author = User::factory()->hasArticles(2)->create();
+
+    Article::factory()->count(2)->create();
+
+    $this->jsonApi()
+        ->filter(['authors' => $author->name])
+        ->get(route('api.v1.articles.index'))
+        ->assertJsonCount(2, 'data');
+
+});
+
+it(description: 'can filter articles by multiple authors', closure: function () {
+
+    $author = User::factory()->hasArticles(2)->create();
+    $author2 = User::factory()->hasArticles(3)->create();
+
+    Article::factory()->count(2)->create();
+
+
+    $this->jsonApi()
+        ->filter([
+            'authors' => $author->name.','.$author2->name,
         ])
         ->get(route('api.v1.articles.index'))
         ->assertJsonCount(5, 'data');

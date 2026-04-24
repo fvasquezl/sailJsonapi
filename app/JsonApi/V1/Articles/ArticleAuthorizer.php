@@ -23,9 +23,9 @@ class ArticleAuthorizer implements Authorizer
      */
     public function store(Request $request, string $modelClass): bool|Response
     {
-        if (!$request->user()) {
+        if (! $request->user()) {
             return false;
-         }
+        }
 
         if ($request->has('data.relationships.authors')) {
             return Gate::inspect('store', $modelClass);
@@ -79,7 +79,8 @@ class ArticleAuthorizer implements Authorizer
      */
     public function updateRelationship(Request $request, object $model, string $fieldName): bool|Response
     {
-        $ability=Str::camel('update-'. $fieldName);
+        $ability = Str::camel('update-'.$fieldName);
+
         return Gate::inspect($ability, $model);
     }
 

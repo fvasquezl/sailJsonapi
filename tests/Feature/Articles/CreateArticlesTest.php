@@ -31,8 +31,9 @@ it('returns json errors when no data is sent', function () {
     Sanctum::actingAs($user, ['articles:store']);
 
     $this->jsonApi()
-        ->post(route('api.v1.articles.store'))
-        ->assertStatus(422)
+        ->withData([])
+        ->post(route('api.v1.articles.store'))->dump()
+        ->assertStatus(400)
         ->assertJson([
             'errors' => [
                 ['source' => ['pointer' => '/data']],

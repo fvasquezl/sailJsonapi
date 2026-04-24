@@ -51,6 +51,7 @@ class ArticleSchema extends Schema
             Scope::make('month'),
             Scope::make('search'),
             Scope::make('categories'),
+            Scope::make('authors'),
         ];
     }
 

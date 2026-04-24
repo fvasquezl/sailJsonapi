@@ -88,4 +88,10 @@ class Article extends Model
             $q->whereIn('slug', explode(',', $values));
         });
     }
+    public function scopeAuthors(Builder $query, $values): void
+    {
+        $query->whereHas('user', function ($q) use ($values) {
+            $q->whereIn('name', explode(',', $values));
+        });
+    }
 }
