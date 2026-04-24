@@ -270,6 +270,25 @@ it('content is required', function () {
 });
 
 // Pest
+it('slug is required', function () {
+
+    $user = User::factory()->create();
+    $data = $this->jsonData(['user' => $user, 'slug' => '']);
+
+    Sanctum::actingAs($user, ['*']);
+
+    $this->jsonApi()
+        ->withData($data)
+        ->post(route('api.v1.articles.store'))
+        ->assertUnprocessable() // 422
+        ->assertSee('data\/attributes\/slug');
+
+    $this->assertDatabaseMissing('articles', [
+        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+    ]);
+});
+
+// Pest
 it('slug must be unique', function () {
 
     $user = User::factory()->create();
@@ -289,8 +308,8 @@ it('slug must be unique', function () {
     $this->assertDatabaseCount('articles', 1);
 });
 
- // Pest
- it('slug must only contain letters numbers and dashes', function () {
+// Pest
+it('slug must only contain letters numbers and dashes', function () {
 
     $user = User::factory()->create();
 
@@ -307,10 +326,10 @@ it('slug must be unique', function () {
     $this->assertDatabaseMissing('articles', [
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
     ]);
- });
+});
 
- // Pest
- it('slug must not contain underscores', function () {
+// Pest
+it('slug must not contain underscores', function () {
 
     $user = User::factory()->create();
 
@@ -328,10 +347,10 @@ it('slug must be unique', function () {
     $this->assertDatabaseMissing('articles', [
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
     ]);
- });
+});
 
- // Pest
- it('slug must not start with dashes', function () {
+// Pest
+it('slug must not start with dashes', function () {
 
     $user = User::factory()->create();
 
@@ -349,10 +368,10 @@ it('slug must be unique', function () {
     $this->assertDatabaseMissing('articles', [
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
     ]);
- });
+});
 
- // Pest
- it('slug must not end with dashes', function () {
+// Pest
+it('slug must not end with dashes', function () {
 
     $user = User::factory()->create();
 
@@ -370,4 +389,4 @@ it('slug must be unique', function () {
     $this->assertDatabaseMissing('articles', [
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
     ]);
- });
+});
