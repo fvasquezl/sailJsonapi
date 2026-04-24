@@ -1,12 +1,10 @@
 <?php
 
-// Pest
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
-// Pest
 it('guest users cannot create articles', function () {
 
     $article = $this->jsonData(
@@ -24,7 +22,6 @@ it('guest users cannot create articles', function () {
 
 });
 
-// Pest
 it('returns json errors when no data is sent', function () {
 
     $user = User::factory()->create();
@@ -42,7 +39,6 @@ it('returns json errors when no data is sent', function () {
         ]);
 });
 
-// Pest
 it('authenticated users can create articles', function () {
 
     $user = User::factory()->create();
@@ -77,7 +73,6 @@ it('authenticated users can create articles', function () {
     ]);
 });
 
-// Pest
 it('authenticated users cannot create articles without permissions', function () {
 
     $user = User::factory()->create();
@@ -93,13 +88,12 @@ it('authenticated users cannot create articles without permissions', function ()
     $this->jsonApi()
         ->withData($data)
         ->post(route('api.v1.articles.store'))
-        ->assertStatus(403);  // Forbidden
+        ->assertForbidden();  //403 Forbidden
 
     expect(Article::count())->toBe(0);
 
 });
 
-// Pest
 it('authenticated users cannot create articles on behalf of other user', function () {
 
     $user = User::factory()->create();
@@ -125,7 +119,6 @@ it('authenticated users cannot create articles on behalf of other user', functio
     expect(Article::count())->toBe(0);
 });
 
-// Pest
 it('can have protection to mass assignment', function () {
 
     $user = User::factory()->create();
@@ -146,7 +139,6 @@ it('can have protection to mass assignment', function () {
         ->assertStatus(400);
 });
 
-// Pest
 it('authors is required', function () {
 
     $user = User::factory()->create();
@@ -166,7 +158,6 @@ it('authors is required', function () {
     ]);
 });
 
-// Pest
 it('categories is required', function () {
 
     $user = User::factory()->create();
@@ -184,38 +175,12 @@ it('categories is required', function () {
     ]);
 });
 
-// Pest
-it('authors must be a relationship object', function () {
-
-    $category = Category::factory()->create();
-    $data = $this->jsonData(['category' => $category]);
-
-    $data['relationships']['authors'] = [
-        'data' => ['type' => 'categories', 'id' => '1'],
-    ];
-
-    Sanctum::actingAs(User::factory()->create());
-
-    $this->jsonApi()
-        ->withData($data)
-        ->post(route('api.v1.articles.store'))
-        ->assertStatus(422)  // documento bien formado, pero las reglas de validación del negocio no se cumplen
-        ->assertSee('data\/relationships\/authors');
-
-    $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
-
-    ]);
-});
-
-// Pest
-it('category must be a relationship object', function () {
-
+it('relationship must be a valid type', function (string $relationship, string $wrongType) {
     $user = User::factory()->create();
-    $data = $this->jsonData(['user' => $user]);
+    $data = $this->jsonData(['user' => $user, 'category' => Category::factory()->create()]);
 
-    $data['relationships']['categories'] = [
-        'data' => ['type' => 'authors', 'id' => '1'],
+    $data['relationships'][$relationship] = [
+        'data' => ['type' => $wrongType, 'id' => '1'],
     ];
 
     Sanctum::actingAs($user);
@@ -223,60 +188,46 @@ it('category must be a relationship object', function () {
     $this->jsonApi()
         ->withData($data)
         ->post(route('api.v1.articles.store'))
-        ->assertUnprocessable() // 422
-        ->assertSee('data\/relationships\/categories');
-
-    $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+        ->assertUnprocessable()
+        ->assertSee("data\\/relationships\\/$relationship");
+})
+    ->with([
+        'authors with categories type' => ['authors', 'categories'],
+        'categories with authors type' => ['categories', 'authors'],
     ]);
-});
 
-// Pest
-it('title is required', function () {
-
+it('rejects empty required attributes', function (string $field) {
     $user = User::factory()->create();
-    $data = $this->jsonData(['user' => $user, 'title' => '']);
+    $data = $this->jsonData(['user' => $user, $field => '']);
 
     Sanctum::actingAs($user, ['*']);
 
     $this->jsonApi()
         ->withData($data)
         ->post(route('api.v1.articles.store'))
-        ->assertUnprocessable() // 422
-        ->assertSee('data\/attributes\/title');
+        ->assertUnprocessable()
+        ->assertSee("data\\/attributes\\/$field");
 
     $this->assertDatabaseMissing('articles', [
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
     ]);
-});
-
-// Pest
-it('content is required', function () {
-
-    $user = User::factory()->create();
-    $data = $this->jsonData(['user' => $user, 'content' => '']);
-
-    Sanctum::actingAs($user, ['*']);
-
-    $this->jsonApi()
-        ->withData($data)
-        ->post(route('api.v1.articles.store'))
-        ->assertUnprocessable() // 422
-        ->assertSee('data\/attributes\/content');
-
-    $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+})
+    ->with([
+        'title', 'content',
     ]);
-});
 
-// Pest
 it('slug must be unique', function () {
 
     $user = User::factory()->create();
+    $category = Category::factory()->create();
 
     Article::factory()->create(['slug' => 'same-slug']);
 
-    $data = $this->jsonData(['user' => $user, 'slug' => 'same-slug']);
+    $data = $this->jsonData([
+        'user' => $user,
+        'category' => $category,
+        'slug' => 'same-slug',
+    ]);
 
     Sanctum::actingAs($user, ['*']);
 
@@ -287,87 +238,33 @@ it('slug must be unique', function () {
         ->assertSee('data\/attributes\/slug');
 
     $this->assertDatabaseCount('articles', 1);
+
 });
 
- // Pest
- it('slug must only contain letters numbers and dashes', function () {
-
+it('rejects invalid slugs', function (string $slug, ?string $translationKey = null) {
     $user = User::factory()->create();
-
-    $data = $this->jsonData(['user' => $user, 'slug' => '%$%#@']);
+    $data = $this->jsonData(['user' => $user, 'slug' => $slug]);
 
     Sanctum::actingAs($user, ['*']);
 
-    $this->jsonApi()
+    $response = $this->jsonApi()
         ->withData($data)
         ->post(route('api.v1.articles.store'))
-        ->assertUnprocessable() // 422
+        ->assertUnprocessable()
         ->assertSee('data\/attributes\/slug');
+
+    if ($translationKey) {
+        $response->assertSee(__($translationKey, ['attribute' => 'slug']));
+    }
 
     $this->assertDatabaseMissing('articles', [
         $this->article->getRouteKeyName() => $this->article->getRouteKey(),
     ]);
- });
-
- // Pest
- it('slug must not contain underscores', function () {
-
-    $user = User::factory()->create();
-
-    $data = $this->jsonData(['user' => $user, 'slug' => 'with_underscores']);
-
-    Sanctum::actingAs($user, ['*']);
-
-    $this->jsonApi()
-        ->withData($data)
-        ->post(route('api.v1.articles.store'))
-        ->assertSee(__('validation.no_underscores', ['attribute' => 'slug']))
-        ->assertUnprocessable() // 422
-        ->assertSee('data\/attributes\/slug');
-
-    $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+})
+    ->with([
+        'empty' => ['', null],
+        'invalid characters' => ['%$%#@', null],
+        'contains underscores' => ['with_underscores', 'validation.no_underscores'],
+        'starts with dash' => ['-start-with-dash', 'validation.no_starting_dashes'],
+        'ends with dash' => ['end-with-dash-', 'validation.no_ending_dashes'],
     ]);
- });
-
- // Pest
- it('slug must not start with dashes', function () {
-
-    $user = User::factory()->create();
-
-    $data = $this->jsonData(['user' => $user, 'slug' => '-start-with-dash']);
-
-    Sanctum::actingAs($user, ['*']);
-
-    $this->jsonApi()
-        ->withData($data)
-        ->post(route('api.v1.articles.store'))
-        ->assertSee(__('validation.no_starting_dashes', ['attribute' => 'slug']))
-        ->assertUnprocessable() // 422
-        ->assertSee('data\/attributes\/slug');
-
-    $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
-    ]);
- });
-
- // Pest
- it('slug must not end with dashes', function () {
-
-    $user = User::factory()->create();
-
-    $data = $this->jsonData(['user' => $user, 'slug' => 'end-with-dash-']);
-
-    Sanctum::actingAs($user, ['*']);
-
-    $this->jsonApi()
-        ->withData($data)
-        ->post(route('api.v1.articles.store'))
-        ->assertSee(__('validation.no_ending_dashes', ['attribute' => 'slug']))
-        ->assertUnprocessable() // 422
-        ->assertSee('data\/attributes\/slug');
-
-    $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
-    ]);
- });

@@ -186,13 +186,14 @@ it('can replace the categories', function () {
     $this->jsonApi()
         ->withData([
             'type' => 'categories',
-            'id' => $category->getRouteKey(),
+            'id' => (string) $category->getRouteKey(),
         ])
         ->patch(route('api.v1.articles.categories.update', $article))
         ->assertStatus(200);
 
-    $this->assertDatabaseMissing('articles', [
-        'category_id' => $category->getRouteKey(),
+    $this->assertDatabaseHas('articles', [
+        'id' => $article->id,
+        'category_id' => $category->id,
     ]);
 });
 

@@ -1,6 +1,5 @@
 <?php
 
-// Pest
 use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
@@ -20,7 +19,6 @@ it('guest users cannot create categories', function () {
     $this->assertDatabaseMissing('categories', $category);
 });
 
-// Pest
 it('authenticated users can create categories', function () {
 
     $category = Category::factory()->raw();
@@ -43,7 +41,6 @@ it('authenticated users can create categories', function () {
     ]);
 });
 
-// Pest
 it('name is required', function () {
 
     $category = Category::factory()->raw(['name' => '']);
@@ -62,7 +59,6 @@ it('name is required', function () {
     $this->assertDatabaseMissing('categories', $category);
 });
 
-// Pest
 it('slug is required', function () {
 
     $category = Category::factory()->raw(['slug' => '']);
@@ -81,7 +77,6 @@ it('slug is required', function () {
     $this->assertDatabaseMissing('categories', $category);
 });
 
-// Pest
 it('slug must be unique', function () {
 
     Category::factory()->create(['slug' => 'same-slug']);
@@ -103,7 +98,6 @@ it('slug must be unique', function () {
 
 });
 
-// Pest
 it('slug must only contain letters numbers and dashes', function () {
 
     $category = Category::factory()->raw(['slug' => '%$%#@']);
@@ -123,7 +117,6 @@ it('slug must only contain letters numbers and dashes', function () {
 
 });
 
-// Pest
 it('slug must not contain underscores', function () {
 
     $category = Category::factory()->raw(['slug' => 'with_underscores']);
@@ -143,7 +136,6 @@ it('slug must not contain underscores', function () {
 
 });
 
-// Pest
 it('slug must not start with dashes', function () {
 
     $category = Category::factory()->raw(['slug' => '-start-with-dash']);
@@ -162,7 +154,6 @@ it('slug must not start with dashes', function () {
     $this->assertDatabaseMissing('categories', $category);
 });
 
-// Pest
 it('slug must not end with dashes', function () {
 
     $category = Category::factory()->raw(['slug' => 'end-with-dash-']);

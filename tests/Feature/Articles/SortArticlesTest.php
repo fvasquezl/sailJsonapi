@@ -1,10 +1,8 @@
 <?php
 
 use App\Models\Article;
-use Tests\TestCase;
 
 it('can sort articles by title asc', function () {
-    
 
     Article::factory()->create(['title' => 'C title']);
     Article::factory()->create(['title' => 'A title']);
@@ -20,7 +18,6 @@ it('can sort articles by title asc', function () {
 });
 
 it('can sort articles by title desc', function () {
-    
 
     Article::factory()->create(['title' => 'C title']);
     Article::factory()->create(['title' => 'A title']);
@@ -36,21 +33,19 @@ it('can sort articles by title desc', function () {
 });
 
 it('can sort articles by title and content', function () {
-    
 
     Article::factory()->create([
         'title' => 'C title',
-        'content' => 'B content'
+        'content' => 'B content',
     ]);
     Article::factory()->create([
         'title' => 'A title',
-        'content' => 'C content'
+        'content' => 'C content',
     ]);
     Article::factory()->create([
         'title' => 'B title',
-        'content' => 'D content'
+        'content' => 'D content',
     ]);
-
 
     $url = route('api.v1.articles.index').'?sort=title,-content';
 
@@ -70,7 +65,6 @@ it('can sort articles by title and content', function () {
 });
 
 it('can sort articles by unknown fields', function () {
-    
 
     Article::factory()->times(3)->create();
 
