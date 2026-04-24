@@ -4,10 +4,9 @@
 use App\Models\Permission;
 use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
-use Tests\TestCase;
 
 it('can login with valid credentials', function () {
-    /** @var TestCase $this */
+
     $user = User::factory()->create();
 
     $response = $this->postJson(route('api.v1.login'), [
@@ -26,7 +25,7 @@ it('can login with valid credentials', function () {
 });
 
 it('user permissions are assigned as abilities to the token response', function () {
-    /** @var TestCase $this */
+
     $user = User::factory()->create();
     $permission1 = Permission::factory()->create([
         'name' => $articlesCreatePermission = 'articles:create',
@@ -53,7 +52,7 @@ it('user permissions are assigned as abilities to the token response', function 
 });
 
 it('cannot login with invalid credentials', function () {
-    /** @var TestCase $this */
+
     $this->postJson(route('api.v1.login'), [
         'email' => 'fvasquez@local.com',
         'password' => 'wrong-password',
@@ -61,11 +60,10 @@ it('cannot login with invalid credentials', function () {
     ])->assertJsonValidationErrors([
         'email',
     ]);
-
 });
 
 it('email is required', function () {
-    /** @var TestCase $this */
+
     $this->postJson(route('api.v1.login'), [
         'email' => '',
         'password' => 'wrong-password',
@@ -78,7 +76,7 @@ it('email is required', function () {
 });
 
 it('email must be vaid', function () {
-    /** @var TestCase $this */
+
     $this->postJson(route('api.v1.login'), [
         'email' => 'invalid-email',
         'password' => 'wrong-password',
@@ -91,7 +89,7 @@ it('email must be vaid', function () {
 });
 
 it('password is required', function () {
-    /** @var TestCase $this */
+
     $this->postJson(route('api.v1.login'), [
         'email' => 'fvasquez@local.com',
         'password' => '',
@@ -101,7 +99,7 @@ it('password is required', function () {
 });
 
 it('device_name is required', function () {
-    /** @var TestCase $this */
+
     $this->postJson(route('api.v1.login'), [
         'email' => 'fvasquez@local.com',
         'password' => 'password',
@@ -111,7 +109,7 @@ it('device_name is required', function () {
 });
 
 it('can login twice', function () {
-    /** @var TestCase $this */
+
     $user = User::factory()->create();
 
     $token = $user->createToken($user->name)->plainTextToken;

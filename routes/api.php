@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
 
-Route::prefix('v1')->name('api.v1.')->group(function () {
+Route::name('api.v1.')->group(function () {
     Route::post('login', [LoginController::class, 'login'])
         ->name('login');
 
@@ -28,21 +28,24 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 JsonApiRoute::server('v1')
     ->name('api.v1.')
     ->resources(function ($server) {
-        // Articles — lectura pública
+        // Lectura pública: index, show + relaciones de lectura
+        // Lectura privada: store, update, destroy + relaciones actualizacion
         $server->resource('articles', ArticleController::class)
-            ->only('index', 'show')
+            ->middleware([
+                '*' => [],
+                'store' => 'auth:sanctum',
+                'update' => 'auth:sanctum',
+                'destroy' => 'auth:sanctum',
+            ])
             ->relationships(function ($server) {
-                $server->hasOne('authors');
-                $server->hasOne('categories');
-            });
-
-        // Articles — escritura protegida con Sanctum
-        $server->resource('articles', ArticleController::class)
-            ->except('index', 'show')
-            ->middleware('auth:sanctum')
-            ->relationships(function ($server) {
-                $server->hasOne('authors');
-                $server->hasOne('categories');
+                $server->hasOne('authors')->middleware([
+                    '*' => [],
+                    'update' => 'auth:sanctum',
+                ]);
+                $server->hasOne('categories')->middleware([
+                    '*' => [],
+                    'update' => 'auth:sanctum',
+                ]);
             });
 
         // Authors — solo lectura

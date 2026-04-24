@@ -1,10 +1,9 @@
 <?php
 
 use App\Models\Category;
-use Tests\TestCase;
 
 it(description: 'can fetch a single category', closure: function () {
-    /** @var TestCase $this */
+
     $category = Category::factory()->create();
 
     $this->jsonApi()->get(route('api.v1.categories.show', $category))
@@ -25,7 +24,7 @@ it(description: 'can fetch a single category', closure: function () {
 });
 
 it(description: 'can fetch all categories', closure: function () {
-    /** @var TestCase $this */
+
     $categories = Category::factory()->count(3)->create();
 
     $this->jsonApi()->get(route('api.v1.categories.index'))
@@ -75,4 +74,3 @@ it(description: 'can fetch all categories', closure: function () {
             ],
         ]);
 });
-

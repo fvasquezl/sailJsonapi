@@ -3,11 +3,9 @@
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
-use Tests\TestCase;
 
-it(description: 'can filter articles by title', closure: function () {
+it('can filter articles by title', function () {
 
-    /** @var TestCase $this */
     Article::factory()->create([
         'title' => 'Aprende laravel desde cero',
     ]);
@@ -27,9 +25,8 @@ it(description: 'can filter articles by title', closure: function () {
         ->assertDontSee('Other Article');
 });
 
-it(description: 'can filter articles by content', closure: function () {
+it('can filter articles by content', function () {
 
-    /** @var TestCase $this */
     Article::factory()->create([
         'content' => '<div>Aprende laravel desde cero</div>',
     ]);
@@ -46,9 +43,8 @@ it(description: 'can filter articles by content', closure: function () {
         ->assertDontSee('Other Article');
 });
 
-it(description: 'can filter articles by year', closure: function () {
+it('can filter articles by year', function () {
 
-    /** @var TestCase $this */
     Article::factory()->create([
         'title' => 'Article from 2020',
         'created_at' => now()->year(2020),
@@ -66,9 +62,8 @@ it(description: 'can filter articles by year', closure: function () {
         ->assertDontSee('Article from 2021');
 });
 
-it(description: 'can filter articles by month', closure: function () {
+it('can filter articles by month', function () {
 
-    /** @var TestCase $this */
     Article::factory()->create([
         'title' => 'Article from February',
         'created_at' => now()->startOfMonth()->setMonth(2),
@@ -93,9 +88,8 @@ it(description: 'can filter articles by month', closure: function () {
         ->assertDontSee('Article from January');
 });
 
-it(description: 'cannot filter articles by unknown filters', closure: function () {
+it('cannot filter articles by unknown filters', function () {
 
-    /** @var TestCase $this */
     Article::factory()->create();
 
     $url = route('api.v1.articles.index', ['filter[unknown]' => 2]);
@@ -103,9 +97,8 @@ it(description: 'cannot filter articles by unknown filters', closure: function (
     $this->jsonApi()->get($url)->assertStatus(400);
 });
 
-it(description: 'can search articles by title and content', closure: function () {
+it('can search articles by title and content', function () {
 
-    /** @var TestCase $this */
     Article::factory()->create([
         'title' => 'Article from Aprendible',
         'content' => 'Content',
@@ -129,9 +122,8 @@ it(description: 'can search articles by title and content', closure: function ()
         ->assertDontSee('Content 2');
 });
 
-it(description: 'can search articles by title and conten with multiple terms', closure: function () {
+it('can search articles by title and conten with multiple terms', function () {
 
-    /** @var TestCase $this */
     Article::factory()->create([
         'title' => 'Article from Aprendible',
         'content' => 'Content',
@@ -164,7 +156,7 @@ it(description: 'can search articles by title and conten with multiple terms', c
 /**
  * localhost/api/v1/articles/?filter[categories]=cat-1
  **/
-it(description: 'can filter articles by categories', closure: function () {
+it('can filter articles by categories', function () {
 
     Article::factory()->count(2)->create();
 
@@ -177,11 +169,10 @@ it(description: 'can filter articles by categories', closure: function () {
 
 });
 
-
 /**
  * localhost/api/v1/articles/?filter[categories]=voluptate-et-iusto-repellendus-sapiente-vitae-ipsa-maiores,quos-temporibus-et-possimus-molestiae-quos
  **/
-it(description: 'can filter articles by multiple categories', closure: function () {
+it('can filter articles by multiple categories', function () {
 
     Article::factory()->count(2)->create();
 
@@ -196,8 +187,7 @@ it(description: 'can filter articles by multiple categories', closure: function 
         ->assertJsonCount(5, 'data');
 });
 
-
-it(description: 'can filter articles by authors', closure: function () {
+it('can filter articles by authors', function () {
 
     $author = User::factory()->hasArticles(2)->create();
 
@@ -210,13 +200,12 @@ it(description: 'can filter articles by authors', closure: function () {
 
 });
 
-it(description: 'can filter articles by multiple authors', closure: function () {
+it('can filter articles by multiple authors', function () {
 
     $author = User::factory()->hasArticles(2)->create();
     $author2 = User::factory()->hasArticles(3)->create();
 
     Article::factory()->count(2)->create();
-
 
     $this->jsonApi()
         ->filter([

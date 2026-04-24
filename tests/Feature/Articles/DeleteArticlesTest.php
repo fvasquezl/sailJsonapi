@@ -3,10 +3,9 @@
 use App\Models\Article;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
-use Tests\TestCase;
 
 it('guest users cannot delete articles', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
 
     $this->jsonApi()
@@ -15,7 +14,7 @@ it('guest users cannot delete articles', function () {
 });
 
 it('authenticated users can delete their articles', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
 
     Sanctum::actingAs($article->user, ['articles:delete']);
@@ -27,7 +26,7 @@ it('authenticated users can delete their articles', function () {
 });
 
 it('authenticated users can delete their articles without permissions', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
 
     Sanctum::actingAs($article->user);
@@ -39,7 +38,7 @@ it('authenticated users can delete their articles without permissions', function
 });
 
 it('authenticated users cannot delete other articles', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
 
     Sanctum::actingAs($user = User::factory()->create());

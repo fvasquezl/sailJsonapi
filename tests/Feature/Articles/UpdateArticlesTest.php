@@ -5,10 +5,9 @@ use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
-use Tests\TestCase;
 
 it('guest users cannot update articles', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
 
     $this->jsonApi()
@@ -26,7 +25,7 @@ it('guest users cannot update articles', function () {
 });
 
 it('authenticated users can update their articles', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
     $category = Category::factory()->create();
 
@@ -67,7 +66,7 @@ it('authenticated users can update their articles', function () {
 });
 
 it('authenticated users can update their articles without permissions', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
     $category = Category::factory()->create();
 
@@ -108,7 +107,7 @@ it('authenticated users can update their articles without permissions', function
 });
 
 it('authenticated users cannot update other articles', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
 
     Sanctum::actingAs(User::factory()->create());
@@ -134,7 +133,7 @@ it('authenticated users cannot update other articles', function () {
 });
 
 it('authenticated users can update title only', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
 
     Sanctum::actingAs($article->user, ['articles:update']);
@@ -156,7 +155,7 @@ it('authenticated users can update title only', function () {
 });
 
 it('authenticated users can update slug only', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
 
     Sanctum::actingAs($article->user, ['articles:update']);
@@ -178,7 +177,7 @@ it('authenticated users can update slug only', function () {
 });
 
 it('can replace the categories', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
     $category = Category::factory()->create();
 
@@ -198,7 +197,7 @@ it('can replace the categories', function () {
 });
 
 it('can replace the author', function () {
-    /** @var TestCase $this */
+
     $article = Article::factory()->create();
     $author = User::factory()->create();
 

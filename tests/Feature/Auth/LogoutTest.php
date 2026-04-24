@@ -3,10 +3,9 @@
 // Pest
 use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
-use Tests\TestCase;
 
 it('can logout', function () {
-    /** @var TestCase $this */
+
     $user = User::factory()->create();
 
     $token = $user->createToken($user->name)->plainTextToken;

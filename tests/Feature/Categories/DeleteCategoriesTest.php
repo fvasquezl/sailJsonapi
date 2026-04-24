@@ -3,10 +3,9 @@
 use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
-use Tests\TestCase;
 
 it('guest users cannot delete categories', function () {
-    /** @var TestCase $this */
+
     $category = Category::factory()->create();
 
     $this->jsonApi()
@@ -15,7 +14,7 @@ it('guest users cannot delete categories', function () {
 });
 
 it('authenticated users can delete categories', function () {
-    /** @var TestCase $this */
+
     $category = Category::factory()->create();
 
     Sanctum::actingAs(User::factory()->create());

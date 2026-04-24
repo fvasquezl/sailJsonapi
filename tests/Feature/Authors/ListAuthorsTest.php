@@ -2,11 +2,10 @@
 
 use App\Models\User;
 use Illuminate\Support\Str;
-use Tests\TestCase;
 
 // Pest
 it('can fetch single author', function () {
-    /** @var TestCase $this */
+
     $author = User::factory()->create();
 
     $response = $this->jsonApi()
@@ -21,7 +20,7 @@ it('can fetch single author', function () {
 
 // Pest
 it('can fetch all authors', function () {
-    /** @var TestCase $this */
+
     $authors = User::factory()->count(3)->create();
 
     $this->jsonApi()

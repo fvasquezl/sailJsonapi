@@ -4,10 +4,9 @@
 use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
-use Tests\TestCase;
 
 it('guest users cannot update categories', function () {
-    /** @var TestCase $this */
+
     $category = Category::factory()->create();
 
     $this->jsonApi()
@@ -24,7 +23,7 @@ it('guest users cannot update categories', function () {
 });
 
 it('authenticated users can update their categories', function () {
-    /** @var TestCase $this */
+
     $category = Category::factory()->create();
 
     Sanctum::actingAs(User::factory()->create());
@@ -48,7 +47,7 @@ it('authenticated users can update their categories', function () {
 });
 
 it('authenticated users can update name only', function () {
-    /** @var TestCase $this */
+
     $category = Category::factory()->create();
 
     Sanctum::actingAs(User::factory()->create());
@@ -70,7 +69,7 @@ it('authenticated users can update name only', function () {
 });
 
 it('authenticated users can update slug only', function () {
-    /** @var TestCase $this */
+
     $category = Category::factory()->create();
 
     Sanctum::actingAs(User::factory()->create());

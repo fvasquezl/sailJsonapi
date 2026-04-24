@@ -4,7 +4,7 @@ use App\Models\Article;
 use Tests\TestCase;
 
 it('can sort articles by title asc', function () {
-    /** @var TestCase $this */
+    
 
     Article::factory()->create(['title' => 'C title']);
     Article::factory()->create(['title' => 'A title']);
@@ -20,7 +20,7 @@ it('can sort articles by title asc', function () {
 });
 
 it('can sort articles by title desc', function () {
-    /** @var TestCase $this */
+    
 
     Article::factory()->create(['title' => 'C title']);
     Article::factory()->create(['title' => 'A title']);
@@ -36,7 +36,7 @@ it('can sort articles by title desc', function () {
 });
 
 it('can sort articles by title and content', function () {
-    /** @var TestCase $this */
+    
 
     Article::factory()->create([
         'title' => 'C title',
@@ -70,7 +70,7 @@ it('can sort articles by title and content', function () {
 });
 
 it('can sort articles by unknown fields', function () {
-    /** @var TestCase $this */
+    
 
     Article::factory()->times(3)->create();
 

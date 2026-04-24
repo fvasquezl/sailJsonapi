@@ -3,7 +3,7 @@
 use App\Models\Article;
 use Tests\TestCase;
 
-it(description: 'can fetch a single article', closure: function () {
+it('can fetch a single article', function () {
     /** @var TestCase $this */
     $article = Article::factory()->create();
 
@@ -33,8 +33,8 @@ it(description: 'can fetch a single article', closure: function () {
         ]);
 });
 
-it(description: 'can fetch all articles', closure: function () {
-    /** @var TestCase $this */
+it('can fetch all articles', function () {
+
     $articles = Article::factory()->count(3)->create();
 
     $this->jsonApi()->get(route('api.v1.articles.index'))
