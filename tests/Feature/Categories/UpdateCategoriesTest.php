@@ -1,12 +1,10 @@
 <?php
 
-// Pest
 use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
 it('guest users cannot update categories', function () {
-
     $category = Category::factory()->create();
 
     $this->jsonApi()
@@ -23,7 +21,6 @@ it('guest users cannot update categories', function () {
 });
 
 it('authenticated users can update their categories', function () {
-
     $category = Category::factory()->create();
 
     Sanctum::actingAs(User::factory()->create());
@@ -46,8 +43,7 @@ it('authenticated users can update their categories', function () {
     ]);
 });
 
-it('authenticated users can update name only', function () {
-
+it('authenticated users can update single attribute', function (array $attributes) {
     $category = Category::factory()->create();
 
     Sanctum::actingAs(User::factory()->create());
@@ -56,36 +52,14 @@ it('authenticated users can update name only', function () {
         ->withData([
             'type' => 'categories',
             'id' => $category->getRouteKey(),
-            'attributes' => [
-                'name' => 'Name changed',
-            ],
+            'attributes' => $attributes,
         ])
         ->patch(route('api.v1.categories.update', $category))
-        ->assertOK(); // 200
+        ->assertOk();
 
-    $this->assertDatabaseHas('categories', [
-        'name' => 'Name changed',
+    $this->assertDatabaseHas('categories', $attributes);
+})
+    ->with([
+        'name only' => [['name' => 'Name changed']],
+        'slug only' => [['slug' => 'slug-changed']],
     ]);
-});
-
-it('authenticated users can update slug only', function () {
-
-    $category = Category::factory()->create();
-
-    Sanctum::actingAs(User::factory()->create());
-
-    $this->jsonApi()
-        ->withData([
-            'type' => 'categories',
-            'id' => $category->getRouteKey(),
-            'attributes' => [
-                'slug' => 'slug-changed',
-            ],
-        ])
-        ->patch(route('api.v1.categories.update', $category))
-        ->assertOK(); // 200
-
-    $this->assertDatabaseHas('categories', [
-        'slug' => 'slug-changed',
-    ]);
-});

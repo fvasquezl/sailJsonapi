@@ -1,13 +1,11 @@
 <?php
 
-// Pest
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
 it('guest users cannot update articles', function () {
-
     $article = Article::factory()->create();
 
     $this->jsonApi()
@@ -25,7 +23,6 @@ it('guest users cannot update articles', function () {
 });
 
 it('authenticated users can update their articles', function () {
-
     $article = Article::factory()->create();
     $category = Category::factory()->create();
 
@@ -66,7 +63,6 @@ it('authenticated users can update their articles', function () {
 });
 
 it('authenticated users can update their articles without permissions', function () {
-
     $article = Article::factory()->create();
     $category = Category::factory()->create();
 
@@ -107,7 +103,6 @@ it('authenticated users can update their articles without permissions', function
 });
 
 it('authenticated users cannot update other articles', function () {
-
     $article = Article::factory()->create();
 
     Sanctum::actingAs(User::factory()->create());
@@ -132,8 +127,7 @@ it('authenticated users cannot update other articles', function () {
     ]);
 });
 
-it('authenticated users can update title only', function () {
-
+it('authenticated users can update single attribute', function (array $attributes) {
     $article = Article::factory()->create();
 
     Sanctum::actingAs($article->user, ['articles:update']);
@@ -142,42 +136,19 @@ it('authenticated users can update title only', function () {
         ->withData([
             'type' => 'articles',
             'id' => $article->getRouteKey(),
-            'attributes' => [
-                'title' => 'Title changed',
-            ],
+            'attributes' => $attributes,
         ])
         ->patch(route('api.v1.articles.update', $article))
-        ->assertOK(); // 200
+        ->assertOk();
 
-    $this->assertDatabaseHas('articles', [
-        'title' => 'Title changed',
+    $this->assertDatabaseHas('articles', $attributes);
+})
+    ->with([
+        'title only' => [['title' => 'Title changed']],
+        'slug only' => [['slug' => 'slug-changed']],
     ]);
-});
-
-it('authenticated users can update slug only', function () {
-
-    $article = Article::factory()->create();
-
-    Sanctum::actingAs($article->user, ['articles:update']);
-
-    $this->jsonApi()
-        ->withData([
-            'type' => 'articles',
-            'id' => $article->getRouteKey(),
-            'attributes' => [
-                'slug' => 'slug-changed',
-            ],
-        ])
-        ->patch(route('api.v1.articles.update', $article))
-        ->assertOK(); // 200
-
-    $this->assertDatabaseHas('articles', [
-        'slug' => 'slug-changed',
-    ]);
-});
 
 it('can replace the categories', function () {
-
     $article = Article::factory()->create();
     $category = Category::factory()->create();
 
@@ -189,7 +160,7 @@ it('can replace the categories', function () {
             'id' => (string) $category->getRouteKey(),
         ])
         ->patch(route('api.v1.articles.categories.update', $article))
-        ->assertStatus(200);
+        ->assertOK(); // 200
 
     $this->assertDatabaseHas('articles', [
         'id' => $article->id,
@@ -198,7 +169,6 @@ it('can replace the categories', function () {
 });
 
 it('can replace the author', function () {
-
     $article = Article::factory()->create();
     $author = User::factory()->create();
 

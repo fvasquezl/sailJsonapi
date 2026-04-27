@@ -155,3 +155,92 @@ arch('controllers')
 - Forgetting datasets for repetitive validation tests
 - Deleting tests without approval
 - Forgetting `assertNoJavaScriptErrors()` in browser tests
+
+## Project-specific patterns (Sail/JSON:API)
+
+### JSON:API requests — use `$this->jsonApi()`, not `getJson()/postJson()`
+
+This project uses `laravel-json-api/laravel`. The TestCase already includes `MakesJsonApiRequests`. Always use `$this->jsonApi()` for JSON:API endpoints — it sends `Accept: application/vnd.api+json`. Plain `getJson()`/`postJson()` send `application/json` and the package responds **406 Not Acceptable**.
+
+```php
+$this->jsonApi()
+    ->withData($payload)
+    ->post(route('api.v1.articles.store'))
+    ->assertCreated();
+```
+
+For non-JSON:API endpoints (login, register, logout, user) — use `postJson()`/`getJson()` as normal Laravel.
+
+### Dataset keys MUST be descriptive (not numeric)
+
+```php
+// GOOD — runner shows: "rejects invalid slugs with data set 'empty'"
+->with([
+    'empty' => ['', null],
+    'contains underscores' => ['with_underscores', 'validation.no_underscores'],
+]);
+
+// BAD — runner shows: "rejects invalid slugs with data set #0"
+->with([
+    ['', null],
+    ['with_underscores', 'validation.no_underscores'],
+]);
+```
+
+### Don't write `/** @var TestCase $this */`
+
+`tests/Pest.php` already binds with `pest()->extend(TestCase::class)->in('Feature', 'Unit')`. PHPStorm/PHPStan resolve `$this` automatically. The annotation is noise.
+
+### Status helpers — prefer specific over `assertStatus()`
+
+| Use | Instead of |
+|---|---|
+| `assertOk()` | `assertStatus(200)`, `assertOK()` (uppercase works but isn't canonical) |
+| `assertCreated()` | `assertStatus(201)` |
+| `assertNoContent()` | `assertStatus(204)` |
+| `assertUnauthorized()` | `assertStatus(401)` |
+| `assertForbidden()` | `assertStatus(403)` |
+| `assertNotFound()` | `assertStatus(404)` |
+| `assertUnprocessable()` | `assertStatus(422)` |
+
+`assertStatus(400)` has no native helper — leave as-is.
+
+### `assertDatabaseHas/Missing` with FK columns — use `->id`, not `getRouteKey()`
+
+If a model uses a non-id route key (e.g. `Category::getRouteKeyName(): 'slug'`), then `$category->getRouteKey()` returns the slug string. Comparing it against an integer FK column never matches → `assertDatabaseMissing` silently passes without validating anything.
+
+```php
+// BAD — silently no-op
+$this->assertDatabaseHas('articles', [
+    'category_id' => $category->getRouteKey(),  // string slug
+]);
+
+// GOOD
+$this->assertDatabaseHas('articles', [
+    'id' => $article->id,
+    'category_id' => $category->id,
+]);
+```
+
+In JSON:API payloads (`withData()`), `getRouteKey()` is correct because the spec identifies resources by route key.
+
+### Don't use `withoutExceptionHandling()` for 401/403 tests
+
+It propagates `AuthenticationException`/`AuthorizationException` raw instead of letting them become HTTP responses — the test fails on uncaught exception instead of getting `assertUnauthorized()/assertForbidden()`.
+
+To debug other failures:
+- `$response->dump()` / `$response->dd()` — see body as-is
+- `Exceptions::fake()` (Laravel 11+) — inspect exceptions without breaking flow
+- `$this->withoutExceptionHandling([SpecificException::class])` — only one type propagates
+
+### Skip tests intentionally with deduped setup
+
+When tests share setup but a few diverge, `beforeEach()` in the file applies to all. Don't force-fit divergent tests into shared state — keep them inline.
+
+### When NOT to merge tests into a dataset
+
+- Setup creates different prerequisite data (e.g., one test needs an existing record, another doesn't)
+- Final assertions differ (`assertDatabaseCount` vs `assertDatabaseMissing`)
+- Different mocking, auth scopes, or middleware
+
+Forcing these into a dataset requires conditional flags inside the test, which negates the readability win.
