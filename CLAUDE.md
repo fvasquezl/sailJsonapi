@@ -1,3 +1,22 @@
+## Arquitectura del proyecto
+
+- **API**: Laravel 13 + JSON:API (`laravel-json-api/laravel`) en `http://localhost`
+- **SPA cliente**: Vue 3 + TypeScript + Vite en `jsonapi-client/` — corre en host (no en Sail) con `npm run dev`
+- **Auth**: Sanctum SPA (cookies de sesión) via Fortify. El cliente usa `axios.defaults.withCredentials = true` y `withXSRFToken = true`
+
+## Gotchas críticos
+
+### UUID en sessions
+El modelo `User` usa `HasUuids`. La migración de `sessions` **debe** usar `foreignUuid('user_id')`, no `foreignId`. Si se usa `foreignId` (bigint), el login falla silenciosamente — MySQL rechaza el INSERT del UUID pero Laravel no lanza excepción.
+
+### Schema dump
+`database/schema/mysql-schema.sql` sobreescribe las migraciones en `migrate:fresh`. Si modificas una migración existente, debes también actualizar el dump o borrarlo. Regenerar después de cambios: `vendor/bin/sail artisan schema:dump`.
+
+### CORS + Sanctum SPA
+- `allowed_origins: ['*']` es incompatible con `supports_credentials: true`. Usar el origen exacto del cliente: `http://localhost:5174`
+- `SANCTUM_STATEFUL_DOMAINS` debe incluir el puerto exacto del Vite dev server (puede ser 5173 o 5174 — verificar en el browser)
+- `SESSION_DOMAIN` debe estar vacío/null para localhost
+
 ## Approach
 - Think before acting. Read existing files before writing code.
 - Be concise in output but thorough in reasoning.
