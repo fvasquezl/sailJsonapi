@@ -244,3 +244,44 @@ When tests share setup but a few diverge, `beforeEach()` in the file applies to 
 - Different mocking, auth scopes, or middleware
 
 Forcing these into a dataset requires conditional flags inside the test, which negates the readability win.
+
+### Collapse repeated index assertions with `collect()->map()`
+
+For JSON:API index endpoints, don't hand-roll one entry per resource. Map the factory collection into the expected `data` array:
+
+```php
+// BAD — 50+ near-identical lines
+$this->jsonApi()->get(route('api.v1.articles.index'))
+    ->assertJson([
+        'data' => [
+            ['type' => 'articles', 'id' => $articles[0]->id, 'attributes' => [...]],
+            ['type' => 'articles', 'id' => $articles[1]->id, 'attributes' => [...]],
+            ['type' => 'articles', 'id' => $articles[2]->id, 'attributes' => [...]],
+        ],
+    ]);
+
+// GOOD
+$this->jsonApi()->get(route('api.v1.articles.index'))
+    ->assertJson([
+        'data' => $articles->map(fn ($article) => [
+            'type' => 'articles',
+            'id' => (string) $article->getRouteKey(),
+            'attributes' => [
+                'title' => $article->title,
+                'slug' => $article->slug,
+                'createdAt' => $article->created_at->toJSON(),
+                'updatedAt' => $article->updated_at->toJSON(),
+            ],
+            'links' => ['self' => route('api.v1.articles.show', $article)],
+        ])->all(),
+    ]);
+```
+
+### Don't use named arguments in assertions
+
+`assertJson(value: [...])` and `it(description: '...', closure: fn () => ...)` are positional — drop the labels:
+
+```php
+->assertJson([...]);
+it('does the thing', function () { ... });
+```
