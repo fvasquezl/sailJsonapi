@@ -30,8 +30,8 @@ class ArticleSchema extends Schema
             Str::make('title')->sortable(),
             Str::make('slug'),
             Str::make('content')->sortable(),
-            DateTime::make('createdAt')->sortable()->readOnly(),
-            DateTime::make('updatedAt')->sortable()->readOnly(),
+            DateTime::make('created-at')->sortable()->readOnly(),
+            DateTime::make('updated-at')->sortable()->readOnly(),
             BelongsTo::make('categories', 'category'),
             BelongsTo::make('authors', 'user')
                 ->type('authors'),

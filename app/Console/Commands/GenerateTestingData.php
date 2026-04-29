@@ -15,6 +15,7 @@ use Illuminate\Console\ConfirmableTrait;
 class GenerateTestingData extends Command
 {
     use ConfirmableTrait;
+
     /**
      * Execute the console command.
      */
@@ -28,12 +29,31 @@ class GenerateTestingData extends Command
         Article::query()->delete();
         Category::query()->delete();
 
-        $user = User::factory()->hasArticles(1)->create([
+        $categories = collect([
+            'laravel' => 'Laravel',
+            'vuejs' => 'VueJS',
+            'javascript' => 'Javascript',
+            'nextjs' => 'NexJS',
+            'python' => 'Python',
+            'php' => 'PHP',
+            'typescript' => 'TypeScript',
+            'other' => 'Other',
+        ])->map(fn (string $name, string $slug) => Category::factory()->create([
+            'name' => $name,
+            'slug' => $slug,
+        ]));
+
+        $user = User::factory()->hasArticles(1, [
+            'category_id' => $categories->random()->id,
+        ])->create([
             'name' => 'Faustino',
             'email' => 'fvasquez@local.com',
         ]);
 
-        $articles = Article::factory()->count(14)->create();
+        $articles = Article::factory()->count(14)
+            ->sequence(fn () => [
+                'category_id' => $categories->random()->id,
+            ])->create();
 
         $this->info('User UUID:');
         $this->line($user->id);
