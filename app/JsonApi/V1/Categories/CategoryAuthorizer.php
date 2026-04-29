@@ -2,8 +2,10 @@
 
 namespace App\JsonApi\V1\Categories;
 
+
 use Illuminate\Auth\Access\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use LaravelJsonApi\Contracts\Auth\Authorizer;
 
 class CategoryAuthorizer implements Authorizer
@@ -21,7 +23,7 @@ class CategoryAuthorizer implements Authorizer
      */
     public function store(Request $request, string $modelClass): bool|Response
     {
-        return (bool) $request->user();
+        return $request->user() ? Gate::inspect('store', $modelClass) : false;
     }
 
     /**
@@ -37,7 +39,7 @@ class CategoryAuthorizer implements Authorizer
      */
     public function update(Request $request, object $model): bool|Response
     {
-        return (bool) $request->user();
+        return Gate::inspect('update', $model);
     }
 
     /**
@@ -45,7 +47,7 @@ class CategoryAuthorizer implements Authorizer
      */
     public function destroy(Request $request, object $model): bool|Response
     {
-        return (bool) $request->user();
+        return Gate::inspect('destroy', $model);
     }
 
     /**

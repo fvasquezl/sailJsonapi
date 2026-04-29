@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Category;
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
 
 class CategoryPolicy
 {
@@ -26,9 +27,9 @@ class CategoryPolicy
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool
+    public function store(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('categories:store');
     }
 
     /**
@@ -36,15 +37,18 @@ class CategoryPolicy
      */
     public function update(User $user, Category $category): bool
     {
-        return $category->user->is($user);
+
+        return $user->hasPermissionTo('categories:update');
+
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Category $category): bool
+    public function destroy(User $user, Category $category): bool
     {
-        return false;
+        return $user->hasPermissionTo('categories:delete');
+
     }
 
     /**

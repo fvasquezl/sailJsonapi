@@ -4,6 +4,12 @@ use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
+
+
+beforeEach(function () {
+    $this->user = $this->userWithPermission('categories:store');
+});
+
 it('guest users cannot create categories', function () {
 
     $category = Category::factory()->raw();
@@ -25,7 +31,7 @@ it('authenticated users can create categories', function () {
 
     $this->assertDatabaseMissing('categories', $category);
 
-    Sanctum::actingAs(User::factory()->create());
+    Sanctum::actingAs($this->user);
 
     $this->jsonApi()
         ->withData([
@@ -45,7 +51,7 @@ it('name is required', function () {
 
     $category = Category::factory()->raw(['name' => '']);
 
-    Sanctum::actingAs(User::factory()->create());
+    Sanctum::actingAs($this->user);
 
     $this->jsonApi()
         ->withData([
@@ -63,7 +69,7 @@ it('slug is required', function () {
 
     $category = Category::factory()->raw(['slug' => '']);
 
-    Sanctum::actingAs(User::factory()->create());
+    Sanctum::actingAs($this->user);
 
     $this->jsonApi()
         ->withData([
@@ -83,7 +89,7 @@ it('slug must be unique', function () {
 
     $category = Category::factory()->raw(['slug' => 'same-slug']);
 
-    Sanctum::actingAs(User::factory()->create());
+    Sanctum::actingAs($this->user);
 
     $this->jsonApi()
         ->withData([
@@ -102,7 +108,7 @@ it('slug must only contain letters numbers and dashes', function () {
 
     $category = Category::factory()->raw(['slug' => '%$%#@']);
 
-    Sanctum::actingAs(User::factory()->create());
+    Sanctum::actingAs($this->user);
 
     $this->jsonApi()
         ->withData([
@@ -121,7 +127,7 @@ it('slug must not contain underscores', function () {
 
     $category = Category::factory()->raw(['slug' => 'with_underscores']);
 
-    Sanctum::actingAs(User::factory()->create());
+    Sanctum::actingAs($this->user);
 
     $this->jsonApi()
         ->withData([
@@ -140,7 +146,7 @@ it('slug must not start with dashes', function () {
 
     $category = Category::factory()->raw(['slug' => '-start-with-dash']);
 
-    Sanctum::actingAs(User::factory()->create());
+    Sanctum::actingAs($this->user);
 
     $this->jsonApi()
         ->withData([
@@ -158,7 +164,7 @@ it('slug must not end with dashes', function () {
 
     $category = Category::factory()->raw(['slug' => 'end-with-dash-']);
 
-    Sanctum::actingAs(User::factory()->create());
+    Sanctum::actingAs($this->user);
 
     $this->jsonApi()
         ->withData([

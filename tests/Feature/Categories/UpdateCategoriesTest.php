@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Category;
-use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
 it('guest users cannot update categories', function () {
@@ -23,7 +22,7 @@ it('guest users cannot update categories', function () {
 it('authenticated users can update their categories', function () {
     $category = Category::factory()->create();
 
-    Sanctum::actingAs(User::factory()->create());
+    Sanctum::actingAs($this->userWithPermission('categories:update'));
 
     $this->jsonApi()
         ->withData([
@@ -46,7 +45,7 @@ it('authenticated users can update their categories', function () {
 it('authenticated users can update single attribute', function (array $attributes) {
     $category = Category::factory()->create();
 
-    Sanctum::actingAs(User::factory()->create());
+    Sanctum::actingAs($this->userWithPermission('categories:update'));
 
     $this->jsonApi()
         ->withData([

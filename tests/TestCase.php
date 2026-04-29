@@ -10,4 +10,5 @@ abstract class TestCase extends BaseTestCase
     use CreateData, MakesJsonApiRequests {
         MakesJsonApiRequests::jsonApi as public;
     }
+
 }

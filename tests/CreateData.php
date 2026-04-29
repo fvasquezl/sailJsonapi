@@ -5,6 +5,7 @@ namespace Tests;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
+use Spatie\Permission\Models\Permission;
 
 trait CreateData
 {
@@ -14,13 +15,13 @@ trait CreateData
 
     public function jsonData(array $attributes = []): array
     {
-        $relationships=[];
+        $relationships = [];
 
         if (! empty($attributes['user'])) {
             $user = $attributes['user'];
             $relationships = [
                 'authors' => [
-                    'data' => ['type' => 'authors', 'id' => (string)$user->getRouteKey()],
+                    'data' => ['type' => 'authors', 'id' => (string) $user->getRouteKey()],
                 ],
             ];
         }
@@ -31,7 +32,6 @@ trait CreateData
                 'data' => ['type' => 'categories', 'id' => (string) $category->getRouteKey()],
             ];
         }
-
 
         $this->article = Article::factory()->make(
             array_diff_key($attributes, ['user' => true, 'category' => true])
@@ -46,5 +46,15 @@ trait CreateData
             ],
             'relationships' => $relationships,
         ];
+    }
+
+    public function userWithPermission(string $permission): User
+    {
+        $user = User::factory()->create();
+        $user->syncPermissions(
+            Permission::findOrCreate($permission, 'web')
+        );
+
+        return $user;
     }
 }

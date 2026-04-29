@@ -9,6 +9,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
+use Spatie\Permission\Models\Permission;
 
 #[Signature('generate:testing-data')]
 #[Description('Generate Testing data for the API')]
@@ -28,6 +29,20 @@ class GenerateTestingData extends Command
         User::query()->delete();
         Article::query()->delete();
         Category::query()->delete();
+        Permission::query()->delete();
+
+        $permissions = collect([
+            'articles:store',
+            'articles:update',
+            'articles:delete',
+            'articles:update-categories',
+            'articles:update-authors',
+            'categories:store',
+            'categories:update',
+            'categories:delete',
+        ])->map(fn (string $name) => Permission::firstOrCreate([
+            'name' => $name,
+        ]));
 
         $categories = collect([
             'laravel' => 'Laravel',
@@ -48,7 +63,7 @@ class GenerateTestingData extends Command
         ])->create([
             'name' => 'Faustino',
             'email' => 'fvasquez@local.com',
-        ]);
+        ])->givePermissionTo($permissions);
 
         $articles = Article::factory()->count(14)
             ->sequence(fn () => [
