@@ -6,15 +6,14 @@ use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
 it('guest users cannot create articles', function () {
-
-    $article = $this->jsonData(
-        [
-            'user' => User::factory()->create(),
-            'category' => Category::factory()->create(),
-        ]);
+    $data = jsonData(
+        Article::factory()->make(),
+        User::factory()->create(),
+        Category::factory()->create(),
+    );
 
     $this->jsonApi()
-        ->withData($article)
+        ->withData($data)
         ->post(route('api.v1.articles.store'))
         ->assertUnauthorized(); // 401
 
@@ -41,19 +40,17 @@ it('returns json errors when no data is sent', function () {
 
 it('authenticated users can create articles', function () {
 
-    $user = User::factory()->create();
-    $category = Category::factory()->create();
-
-    $data = $this->jsonData([
-        'user' => $user,
-        'category' => $category,
-    ]);
+    $data = jsonData(
+        $article = Article::factory()->make(),
+        $user = userWithPermission('articles:store'),
+        Category::factory()->create(),
+    );
 
     $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+        $article->getRouteKeyName() => $article->getRouteKey(),
     ]);
 
-    Sanctum::actingAs($user, ['articles:store']);
+    Sanctum::actingAs($user);
 
     $response = $this->jsonApi()
         ->withData($data)
@@ -61,14 +58,14 @@ it('authenticated users can create articles', function () {
         ->assertCreated();  // 201
 
     expect($response->json('data.attributes'))
-        ->title->toBe($this->article->title)
-        ->slug->toBe($this->article->slug)
-        ->content->toBe($this->article->content);
+        ->title->toBe($article->title)
+        ->slug->toBe($article->slug)
+        ->content->toBe($article->content);
 
     $this->assertDatabaseHas('articles', [
-        'title' => $this->article->title,
-        'slug' => $this->article->slug,
-        'content' => $this->article->content,
+        'title' => $article->title,
+        'slug' => $article->slug,
+        'content' => $article->content,
         'user_id' => $user->id,
     ]);
 });
@@ -77,18 +74,16 @@ it('authenticated users cannot create articles without permissions', function ()
 
     $user = User::factory()->create();
     $category = Category::factory()->create();
+    $article = Article::factory()->make();
 
-    $data = $this->jsonData([
-        'user' => $user,
-        'category' => $category,
-    ]);
+    $data = jsonData($article, $user, $category);
 
     Sanctum::actingAs($user);
 
     $this->jsonApi()
         ->withData($data)
-        ->post(route('api.v1.articles.store'))
-        ->assertForbidden();  //403 Forbidden
+        ->post(route('api.v1.articles.store'))->dump()
+        ->assertForbidden();  // 403 Forbidden
 
     expect(Article::count())->toBe(0);
 
@@ -96,20 +91,18 @@ it('authenticated users cannot create articles without permissions', function ()
 
 it('authenticated users cannot create articles on behalf of other user', function () {
 
-    $user = User::factory()->create();
-    $category = Category::factory()->create();
-
-    $data = $this->jsonData([
-        'user' => $user,
-        'category' => $category,
-    ]);
+    $data = jsonData(
+        $article = Article::factory()->make(),
+        $user = userWithPermission('articles:store'),
+        Category::factory()->create(),
+    );
     $data['relationships']['authors']['data']['id'] = User::factory()->create()->getRouteKey();
 
     $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+        $article->getRouteKeyName() => $article->getRouteKey(),
     ]);
 
-    Sanctum::actingAs($user, ['articles:create']);
+    Sanctum::actingAs($user);
 
     $this->jsonApi()
         ->withData($data)
@@ -121,13 +114,11 @@ it('authenticated users cannot create articles on behalf of other user', functio
 
 it('can have protection to mass assignment', function () {
 
-    $user = User::factory()->create();
-    $category = Category::factory()->create();
-
-    $data = $this->jsonData([
-        'user' => $user,
-        'category' => $category,
-    ]);
+    $data = jsonData(
+        Article::factory()->make(),
+        $user = userWithPermission('articles:store'),
+        Category::factory()->create(),
+    );
 
     $data['attributes']['approved'] = true;
 
@@ -142,9 +133,11 @@ it('can have protection to mass assignment', function () {
 it('authors is required', function () {
 
     $user = User::factory()->create();
-    $category = Category::factory()->create();
 
-    $data = $this->jsonData(['category' => $category]);
+    $data = jsonData(
+        $article = Article::factory()->make(),
+        category: Category::factory()->create(),
+    );
 
     Sanctum::actingAs($user);
 
@@ -154,16 +147,18 @@ it('authors is required', function () {
         ->assertUnprocessable() // 422
         ->assertJsonFragment(['source' => ['pointer' => '/data/relationships/authors']]);
     $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+        $article->getRouteKeyName() => $article->getRouteKey(),
     ]);
 });
 
 it('categories is required', function () {
 
-    $user = User::factory()->create();
-    $data = $this->jsonData(['user' => $user]);
+    $user = userWithPermission('articles:store');
+    $article = Article::factory()->make();
 
-    Sanctum::actingAs($user, ['*']);
+    $data = jsonData($article, $user);
+
+    Sanctum::actingAs($user);
 
     $this->jsonApi()
         ->withData($data)
@@ -171,13 +166,15 @@ it('categories is required', function () {
         ->assertUnprocessable() // 422
         ->assertJsonFragment(['source' => ['pointer' => '/data/relationships/categories']]);
     $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+        $article->getRouteKeyName() => $article->getRouteKey(),
     ]);
 });
 
 it('relationship must be a valid type', function (string $relationship, string $wrongType) {
     $user = User::factory()->create();
-    $data = $this->jsonData(['user' => $user, 'category' => Category::factory()->create()]);
+    $article = Article::factory()->make();
+
+    $data = jsonData($article, $user, Category::factory()->create());
 
     $data['relationships'][$relationship] = [
         'data' => ['type' => $wrongType, 'id' => '1'],
@@ -197,10 +194,12 @@ it('relationship must be a valid type', function (string $relationship, string $
     ]);
 
 it('rejects empty required attributes', function (string $field) {
-    $user = User::factory()->create();
-    $data = $this->jsonData(['user' => $user, $field => '']);
+    $user = userWithPermission('articles:store');
+    $article = Article::factory()->make([$field => '']);
 
-    Sanctum::actingAs($user, ['*']);
+    $data = jsonData($article, $user);
+
+    Sanctum::actingAs($user);
 
     $this->jsonApi()
         ->withData($data)
@@ -209,7 +208,7 @@ it('rejects empty required attributes', function (string $field) {
         ->assertSee("data\\/attributes\\/$field");
 
     $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+        $article->getRouteKeyName() => $article->getRouteKey(),
     ]);
 })
     ->with([
@@ -217,19 +216,14 @@ it('rejects empty required attributes', function (string $field) {
     ]);
 
 it('slug must be unique', function () {
-
-    $user = User::factory()->create();
+    $user = userWithPermission('articles:store');
     $category = Category::factory()->create();
-
     Article::factory()->create(['slug' => 'same-slug']);
+    $article = Article::factory()->make(['slug' => 'same-slug']);
 
-    $data = $this->jsonData([
-        'user' => $user,
-        'category' => $category,
-        'slug' => 'same-slug',
-    ]);
+    $data = jsonData($article, $user, $category);
 
-    Sanctum::actingAs($user, ['*']);
+    Sanctum::actingAs($user);
 
     $this->jsonApi()
         ->withData($data)
@@ -242,10 +236,12 @@ it('slug must be unique', function () {
 });
 
 it('rejects invalid slugs', function (string $slug, ?string $translationKey = null) {
-    $user = User::factory()->create();
-    $data = $this->jsonData(['user' => $user, 'slug' => $slug]);
+    $user = userWithPermission('articles:store');
+    $article = Article::factory()->make(['slug' => $slug]);
 
-    Sanctum::actingAs($user, ['*']);
+    $data = jsonData($article, $user);
+
+    Sanctum::actingAs($user);
 
     $response = $this->jsonApi()
         ->withData($data)
@@ -258,7 +254,7 @@ it('rejects invalid slugs', function (string $slug, ?string $translationKey = nu
     }
 
     $this->assertDatabaseMissing('articles', [
-        $this->article->getRouteKeyName() => $this->article->getRouteKey(),
+        $article->getRouteKeyName() => $article->getRouteKey(),
     ]);
 })
     ->with([

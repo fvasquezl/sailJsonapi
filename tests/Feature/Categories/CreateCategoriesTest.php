@@ -1,13 +1,12 @@
 <?php
 
 use App\Models\Category;
-use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
 
 
 beforeEach(function () {
-    $this->user = $this->userWithPermission('categories:store');
+    $this->user = userWithPermission('categories:store');
 });
 
 it('guest users cannot create categories', function () {

@@ -22,7 +22,7 @@ it('guest users cannot update categories', function () {
 it('authenticated users can update their categories', function () {
     $category = Category::factory()->create();
 
-    Sanctum::actingAs($this->userWithPermission('categories:update'));
+    Sanctum::actingAs(userWithPermission('categories:update'));
 
     $this->jsonApi()
         ->withData([
@@ -45,7 +45,7 @@ it('authenticated users can update their categories', function () {
 it('authenticated users can update single attribute', function (array $attributes) {
     $category = Category::factory()->create();
 
-    Sanctum::actingAs($this->userWithPermission('categories:update'));
+    Sanctum::actingAs(userWithPermission('categories:update'));
 
     $this->jsonApi()
         ->withData([

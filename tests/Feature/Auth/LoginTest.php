@@ -1,8 +1,9 @@
 <?php
 
-use App\Models\Permission;
+
 use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
+use Spatie\Permission\Models\Permission;
 
 it('can login with valid credentials', function () {
     $user = User::factory()->create();

@@ -17,7 +17,7 @@ it('authenticated users can delete categories', function () {
 
     $category = Category::factory()->create();
 
-    Sanctum::actingAs($this->userWithPermission('categories:delete'));
+    Sanctum::actingAs(userWithPermission('categories:delete'));
 
     $this->jsonApi()
         ->delete(route('api.v1.categories.destroy', $category))

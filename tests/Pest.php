@@ -1,6 +1,10 @@
 <?php
 
+use App\Models\Article;
+use App\Models\Category;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 
@@ -47,12 +51,44 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+
+function jsonData(Article $article, ?User $user = null, ?Category $category = null): array
 {
-    // ..
+    $relationships = [];
+
+    if ($user) {
+        $relationships['authors'] = [
+            'data' => ['type' => 'authors', 'id' => (string) $user->getRouteKey()],
+        ];
+    }
+
+    if ($category) {
+        $relationships['categories'] = [
+            'data' => ['type' => 'categories', 'id' => (string) $category->getRouteKey()],
+        ];
+    }
+
+    return [
+        'type' => 'articles',
+        'attributes' => [
+            'title' => $article->title,
+            'slug' => $article->slug,
+            'content' => $article->content,
+        ],
+        'relationships' => $relationships,
+    ];
 }
 
 
+function userWithPermission(string $permission): User
+{
+    $user = User::factory()->create();
+    $user->syncPermissions(
+        Permission::findOrCreate($permission, 'web')
+    );
+
+    return $user;
+}
 
 
 
