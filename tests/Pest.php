@@ -7,9 +7,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
-
-
-
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -51,7 +48,6 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-
 function jsonData(Article $article, ?User $user = null, ?Category $category = null): array
 {
     $relationships = [];
@@ -68,7 +64,7 @@ function jsonData(Article $article, ?User $user = null, ?Category $category = nu
         ];
     }
 
-    return [
+    $data = [
         'type' => 'articles',
         'attributes' => [
             'title' => $article->title,
@@ -77,20 +73,21 @@ function jsonData(Article $article, ?User $user = null, ?Category $category = nu
         ],
         'relationships' => $relationships,
     ];
+
+    if ($article->exists) {
+        $data['id'] = (string) $article->getRouteKey();
+    }
+
+    return $data;
 }
 
-
-function userWithPermission(string $permission): User
+function userWithPermission(string $permission, ?User $user = null): User
 {
-    $user = User::factory()->create();
-    $user->syncPermissions(
+    $user ??= User::factory()->create();
+
+    $user->givePermissionTo(
         Permission::findOrCreate($permission, 'web')
     );
 
     return $user;
 }
-
-
-
-
-

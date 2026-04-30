@@ -285,3 +285,120 @@ $this->jsonApi()->get(route('api.v1.articles.index'))
 ->assertJson([...]);
 it('does the thing', function () { ... });
 ```
+
+### `assertDatabaseEmpty('table')` over `expect(Model::count())->toBe(0)`
+
+```php
+// Idiomatic
+$this->assertDatabaseEmpty('articles');
+
+// Verbose
+expect(Article::count())->toBe(0);
+```
+
+Skip pre-POST `assertDatabaseMissing(...)` — `RefreshDatabase` already guarantees empty tables.
+
+### `assertJsonFragment` over `assertSee` with pointer regex
+
+```php
+// Fragile — depends on exact slash-escape
+->assertSee("data\\/relationships\\/$relationship");
+
+// Robust
+->assertJsonFragment(['source' => ['pointer' => "/data/relationships/$relationship"]]);
+```
+
+## Spatie permissions testing (project-specific)
+
+Policies use `$user->hasPermissionTo('articles:store')`. Three gotchas you WILL hit:
+
+### 1. `hasPermissionTo` THROWS if the permission row doesn't exist
+
+`$user->hasPermissionTo('articles:store')` does two things:
+1. Look up the permission row in `permissions` table → throws `Spatie\Permission\Exceptions\PermissionDoesNotExist` (HTTP 500) if not found.
+2. If found, check `model_has_permissions` for the user's assignment → returns false (HTTP 403 via policy) if not assigned.
+
+A test "user without permission" using `User::factory()->create()` fails with **500**, not 403, unless the permission row exists in the DB.
+
+### 2. Spatie caches permission lookups in memory — RefreshDatabase doesn't clear it
+
+`RefreshDatabase` rolls back tables but doesn't touch Spatie's in-memory cache. Result: tests that pass in suite (because a previous test seeded the permission) fail when run isolated with `--filter`.
+
+**Always verify isolated:**
+```bash
+vendor/bin/sail artisan test --compact --filter='cannot store without permission'
+```
+
+If it passes in suite but fails isolated → cache leak. Add the `beforeEach` below.
+
+### 3. Pattern — seed permissions per file, not in `Pest.php`
+
+Project preference: each test file declares its own `beforeEach`, keeping `tests/Pest.php` clean. Tests in folders that don't need permissions (Auth, Authors, etc.) shouldn't pay the cost.
+
+```php
+// tests/Feature/Articles/CreateArticlesTest.php
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
+
+beforeEach(function () {
+    Permission::findOrCreate('articles:store', 'web');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
+```
+
+Trade-off: small duplication across files of the same resource, but each file is self-contained.
+
+### 4. `Sanctum::actingAs($user, ['articles:update'])` does NOT grant Spatie permissions
+
+The second argument is **Sanctum token scopes**, not Spatie permissions. Tests using this pattern pass only by cache leak — fail isolated.
+
+```php
+// WRONG
+Sanctum::actingAs($user, ['articles:update']);
+
+// RIGHT
+$user = userWithPermission('articles:update', $existingUser);
+Sanctum::actingAs($user);
+```
+
+### 5. `userWithPermission` helper signature
+
+```php
+function userWithPermission(string $permission, ?User $user = null): User
+{
+    $user ??= User::factory()->create();
+    $user->givePermissionTo(Permission::findOrCreate($permission, 'web'));
+    return $user;
+}
+```
+
+- Pass existing user as 2nd arg to add permission to it (e.g. reuse `$article->user`).
+- Uses `givePermissionTo` (not `syncPermissions`) so multiple calls accumulate permissions on the same user.
+- Idempotent — same permission twice doesn't duplicate.
+
+## `jsonData()` helper for JSON:API payloads
+
+Defined in `tests/Pest.php`. Generates the `data` block:
+
+```php
+function jsonData(Article $article, ?User $user = null, ?Category $category = null): array
+{
+    // Returns: ['type' => 'articles', 'attributes' => [...], 'relationships' => [...]]
+}
+```
+
+### Usage by request type
+
+| Request | Pattern |
+|---|---|
+| **POST (store)** | `jsonData(Article::factory()->make(), $user, $category)` — fits naturally |
+| **PATCH (full update)** | Add explicit `?string $id` param OR detect via `$article->exists`. The helper does NOT generate `data.id`, which JSON:API requires for PATCH |
+| **PATCH (single attribute)** | Hand-roll the payload — the helper always sends all 3 attributes, defeating the partial-update test |
+
+### Common bug — `$article['attributes'] = $value` does nothing
+
+Eloquent implements `ArrayAccess` mapping to model attributes. `$article['attributes'] = $arr` sets a literal attribute named `attributes` (no such column) — dead code. If you want to mutate fields:
+
+```php
+$article->fill(['title' => 'new']);  // or $article->title = 'new';
+```

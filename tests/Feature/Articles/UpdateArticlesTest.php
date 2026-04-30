@@ -4,6 +4,13 @@ use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
+
+beforeEach(function () {
+    Permission::findOrCreate('articles:update', 'web');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
 
 it('guest users cannot update articles', function () {
     $article = Article::factory()->create();
@@ -24,113 +31,82 @@ it('guest users cannot update articles', function () {
 
 it('authenticated users can update their articles', function () {
     $article = Article::factory()->create();
-    $category = Category::factory()->create();
+    $article->title = 'Title changed';
+    $article->content = 'Content changed';
 
-    Sanctum::actingAs($user = $article->user, ['articles:update']);
+    $data = jsonData(
+        $article,
+        $user = userWithPermission('articles:update', $article->user),
+        $article->category,
+    );
+
+    Sanctum::actingAs($user);
 
     $this->jsonApi()
-        ->withData([
-            'type' => 'articles',
-            'id' => $article->getRouteKey(),
-            'attributes' => [
-                'title' => 'Title changed',
-                'slug' => 'slug-changed',
-                'content' => 'Content changed',
-            ],
-            'relationships' => [
-                'authors' => [
-                    'data' => [
-                        'type' => 'authors',
-                        'id' => $user->getRouteKey(),
-                    ],
-                ],
-                'categories' => [
-                    'data' => [
-                        'type' => 'categories',
-                        'id' => $category->getRouteKey(),
-                    ],
-                ],
-            ],
-        ])
+        ->withData($data)
         ->patch(route('api.v1.articles.update', $article))
         ->assertOK(); // 200
 
     $this->assertDatabaseHas('articles', [
         'title' => 'Title changed',
-        'slug' => 'slug-changed',
+        'slug' => $article->slug,
         'content' => 'Content changed',
     ]);
 });
 
-it('authenticated users can update their articles without permissions', function () {
+it('authenticated users cannot update their articles without permissions', function () {
     $article = Article::factory()->create();
-    $category = Category::factory()->create();
+    $article->title = 'Title changed';
+    $article->content = 'Content changed';
 
-    Sanctum::actingAs($user = $article->user);
+    $data = jsonData(
+        $article,
+        $user = $article->user,
+        $article->category,
+    );
+
+    Sanctum::actingAs($user);
 
     $this->jsonApi()
-        ->withData([
-            'type' => 'articles',
-            'id' => $article->getRouteKey(),
-            'attributes' => [
-                'title' => 'Title changed',
-                'slug' => 'slug-changed',
-                'content' => 'Content changed',
-            ],
-            'relationships' => [
-                'authors' => [
-                    'data' => [
-                        'type' => 'authors',
-                        'id' => $user->getRouteKey(),
-                    ],
-                ],
-                'categories' => [
-                    'data' => [
-                        'type' => 'categories',
-                        'id' => $category->getRouteKey(),
-                    ],
-                ],
-            ],
-        ])
+        ->withData($data)
         ->patch(route('api.v1.articles.update', $article))
         ->assertForbidden(); // 403
 
     $this->assertDatabaseMissing('articles', [
         'title' => 'Title changed',
-        'slug' => 'slug-changed',
         'content' => 'Content changed',
     ]);
 });
 
 it('authenticated users cannot update other articles', function () {
     $article = Article::factory()->create();
+    $article->title = 'Title changed';
+    $article->content = 'Content changed';
+
+    $data = jsonData(
+        $article,
+        $article->user,
+        $article->category,
+    );
 
     Sanctum::actingAs(User::factory()->create());
 
     $this->jsonApi()
-        ->withData([
-            'type' => 'articles',
-            'id' => $article->getRouteKey(),
-            'attributes' => [
-                'title' => 'Title changed',
-                'slug' => 'slug-changed',
-                'content' => 'Content changed',
-            ],
-        ])
+        ->withData($data)
         ->patch(route('api.v1.articles.update', $article))
         ->assertForbidden(); // 403
 
     $this->assertDatabaseMissing('articles', [
         'title' => 'Title changed',
-        'slug' => 'slug-changed',
         'content' => 'Content changed',
     ]);
 });
 
 it('authenticated users can update single attribute', function (array $attributes) {
     $article = Article::factory()->create();
+    $user = userWithPermission('articles:update', $article->user);
 
-    Sanctum::actingAs($article->user, ['articles:update']);
+    Sanctum::actingAs($user);
 
     $this->jsonApi()
         ->withData([
@@ -141,7 +117,7 @@ it('authenticated users can update single attribute', function (array $attribute
         ->patch(route('api.v1.articles.update', $article))
         ->assertOk();
 
-    $this->assertDatabaseHas('articles', $attributes);
+    $this->assertDatabaseHas('articles', $attributes + ['id' => $article->id]);
 })
     ->with([
         'title only' => [['title' => 'Title changed']],
@@ -151,6 +127,8 @@ it('authenticated users can update single attribute', function (array $attribute
 it('can replace the categories', function () {
     $article = Article::factory()->create();
     $category = Category::factory()->create();
+
+    // / Aqui vamos
 
     Sanctum::actingAs($article->user, ['articles:update-categories']);
 

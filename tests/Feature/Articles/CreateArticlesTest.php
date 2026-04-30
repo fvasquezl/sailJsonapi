@@ -4,6 +4,13 @@ use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
+
+beforeEach(function () {
+    Permission::findOrCreate('articles:store', 'web');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
 
 it('guest users cannot create articles', function () {
     $data = jsonData(
@@ -17,7 +24,7 @@ it('guest users cannot create articles', function () {
         ->post(route('api.v1.articles.store'))
         ->assertUnauthorized(); // 401
 
-    expect(Article::count())->toBe(0);
+    $this->assertDatabaseEmpty('articles');
 
 });
 
@@ -25,7 +32,7 @@ it('returns json errors when no data is sent', function () {
 
     $user = User::factory()->create();
 
-    Sanctum::actingAs($user, ['articles:store']);
+    Sanctum::actingAs($user);
 
     $this->jsonApi()
         ->withData([])
@@ -45,10 +52,6 @@ it('authenticated users can create articles', function () {
         $user = userWithPermission('articles:store'),
         Category::factory()->create(),
     );
-
-    $this->assertDatabaseMissing('articles', [
-        $article->getRouteKeyName() => $article->getRouteKey(),
-    ]);
 
     Sanctum::actingAs($user);
 
@@ -82,25 +85,21 @@ it('authenticated users cannot create articles without permissions', function ()
 
     $this->jsonApi()
         ->withData($data)
-        ->post(route('api.v1.articles.store'))->dump()
+        ->post(route('api.v1.articles.store'))
         ->assertForbidden();  // 403 Forbidden
 
-    expect(Article::count())->toBe(0);
+    $this->assertDatabaseEmpty('articles');
 
 });
 
 it('authenticated users cannot create articles on behalf of other user', function () {
 
     $data = jsonData(
-        $article = Article::factory()->make(),
+        Article::factory()->make(),
         $user = userWithPermission('articles:store'),
         Category::factory()->create(),
     );
     $data['relationships']['authors']['data']['id'] = User::factory()->create()->getRouteKey();
-
-    $this->assertDatabaseMissing('articles', [
-        $article->getRouteKeyName() => $article->getRouteKey(),
-    ]);
 
     Sanctum::actingAs($user);
 
@@ -109,7 +108,7 @@ it('authenticated users cannot create articles on behalf of other user', functio
         ->post(route('api.v1.articles.store'))
         ->assertForbidden();  // 403 Prohibido
 
-    expect(Article::count())->toBe(0);
+    $this->assertDatabaseEmpty('articles');
 });
 
 it('can have protection to mass assignment', function () {
