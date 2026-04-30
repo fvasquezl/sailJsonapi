@@ -3,6 +3,13 @@
 use App\Models\Article;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
+
+beforeEach(function () {
+    Permission::findOrCreate('articles:delete', 'web');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
 
 it('guest users cannot delete articles', function () {
 
@@ -17,7 +24,9 @@ it('authenticated users can delete their articles', function () {
 
     $article = Article::factory()->create();
 
-    Sanctum::actingAs($article->user, ['articles:delete']);
+    Sanctum::actingAs(
+        userWithPermission('articles:delete', $article->user),
+    );
 
     $this->jsonApi()
         ->delete(route('api.v1.articles.destroy', $article))
@@ -25,7 +34,7 @@ it('authenticated users can delete their articles', function () {
 
 });
 
-it('authenticated users can delete their articles without permissions', function () {
+it('authenticated users cannot delete their articles without permissions', function () {
 
     $article = Article::factory()->create();
 
@@ -41,7 +50,7 @@ it('authenticated users cannot delete other articles', function () {
 
     $article = Article::factory()->create();
 
-    Sanctum::actingAs($user = User::factory()->create());
+    Sanctum::actingAs(User::factory()->create());
 
     $this->jsonApi()
         ->delete(route('api.v1.articles.destroy', $article))

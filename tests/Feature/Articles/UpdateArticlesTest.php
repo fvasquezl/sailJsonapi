@@ -34,13 +34,9 @@ it('authenticated users can update their articles', function () {
     $article->title = 'Title changed';
     $article->content = 'Content changed';
 
-    $data = jsonData(
-        $article,
-        $user = userWithPermission('articles:update', $article->user),
-        $article->category,
-    );
+    $data = jsonData($article);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs(userWithPermission('articles:update', $article->user));
 
     $this->jsonApi()
         ->withData($data)
@@ -59,13 +55,9 @@ it('authenticated users cannot update their articles without permissions', funct
     $article->title = 'Title changed';
     $article->content = 'Content changed';
 
-    $data = jsonData(
-        $article,
-        $user = $article->user,
-        $article->category,
-    );
+    $data = jsonData($article);
 
-    Sanctum::actingAs($user);
+    Sanctum::actingAs($article->user);
 
     $this->jsonApi()
         ->withData($data)
@@ -83,11 +75,7 @@ it('authenticated users cannot update other articles', function () {
     $article->title = 'Title changed';
     $article->content = 'Content changed';
 
-    $data = jsonData(
-        $article,
-        $article->user,
-        $article->category,
-    );
+    $data = jsonData($article);
 
     Sanctum::actingAs(User::factory()->create());
 
@@ -128,9 +116,9 @@ it('can replace the categories', function () {
     $article = Article::factory()->create();
     $category = Category::factory()->create();
 
-    // / Aqui vamos
-
-    Sanctum::actingAs($article->user, ['articles:update-categories']);
+    Sanctum::actingAs(
+        userWithPermission('articles:update-categories', $article->user)
+    );
 
     $this->jsonApi()
         ->withData([
@@ -150,7 +138,9 @@ it('can replace the author', function () {
     $article = Article::factory()->create();
     $author = User::factory()->create();
 
-    Sanctum::actingAs($article->user, ['articles:update-authors']);
+    Sanctum::actingAs(
+        userWithPermission('articles:update-authors', $article->user)
+    );
 
     $this->jsonApi()
         ->withData([

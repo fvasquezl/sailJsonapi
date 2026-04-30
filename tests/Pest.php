@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Article;
-use App\Models\Category;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
@@ -48,19 +47,20 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function jsonData(Article $article, ?User $user = null, ?Category $category = null): array
+function jsonData(Article $article, $author = true, $categories = true): array
 {
     $relationships = [];
 
-    if ($user) {
+    if ($author) {
         $relationships['authors'] = [
-            'data' => ['type' => 'authors', 'id' => (string) $user->getRouteKey()],
+            'data' => ['type' => 'authors', 'id' => (string) $article->user->getRouteKey()],
         ];
     }
 
-    if ($category) {
+
+    if ($categories) {
         $relationships['categories'] = [
-            'data' => ['type' => 'categories', 'id' => (string) $category->getRouteKey()],
+            'data' => ['type' => 'categories', 'id' => (string) $article->category->getRouteKey()],
         ];
     }
 
