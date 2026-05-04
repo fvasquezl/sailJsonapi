@@ -91,3 +91,11 @@ function userWithPermission(string $permission, ?User $user = null): User
 
     return $user;
 }
+
+function superAdminUser(): User
+{
+    $user = User::factory()->create();
+    $user->assignRole('super-admin');
+
+    return $user;
+}

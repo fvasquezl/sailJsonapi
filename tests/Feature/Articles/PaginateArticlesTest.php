@@ -4,7 +4,7 @@ use App\Models\Article;
 
 test('can fetch paginate articles', function () {
 
-    $articles = Article::factory()->count(10)->create();
+    Article::factory()->count(10)->create();
 
     $url = route('api.v1.articles.index', ['page[size]' => 2, 'page[number]' => 3]);
 
