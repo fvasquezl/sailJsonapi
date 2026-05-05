@@ -63,6 +63,7 @@ function jsonData(Article $article, $author = true, $categories = true): array
             'data' => ['type' => 'categories', 'id' => (string) $article->category->getRouteKey()],
         ];
     }
+    
 
     $data = [
         'type' => 'articles',

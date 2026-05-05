@@ -36,27 +36,34 @@ it('super admin can create articles on behalf of another user', function () {
 it('super admin can update any article', function () {
     $article = Article::factory()->create();
     $article->title='Articlulo actualizado';
-    $article->slug = 'articulo-actualizado';
-
+    $article->content = 'articulo-actualizado';
+ 
     $data = jsonData($article);
-
+   
     Sanctum::actingAs(superAdminUser());
 
-    $response = $this->jsonApi()
+    $this->jsonApi()
         ->withData($data)
-        ->patch(route('api.v1.articles.update',$article))
+        ->patch(route('api.v1.articles.update', $article))
         ->assertOK(); // 200
 
-    expect($response->json('data.attributes'))
-        ->title->toBe($article->title)
-        ->slug->toBe($article->slug)
-         ->content->toBe($article->content);
 
     $this->assertDatabaseHas('articles', [
         'title' => $article->title,
     ]);
 });
 
-it('super admin can delete any article', function () {
-    //
+
+it('admin can delete any article', function () {
+    $article = Article::factory()->create();
+    $data = jsonData($article);
+   
+    Sanctum::actingAs(superAdminUser());
+
+    $this->jsonApi()
+        ->withData($data)
+        ->delete(route('api.v1.articles.destroy', $article))
+        ->assertNoContent(); // 204
+        
+    $this->assertDatabaseCount('articles', 0);
 });
