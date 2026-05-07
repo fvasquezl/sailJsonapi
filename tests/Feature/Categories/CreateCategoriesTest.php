@@ -46,22 +46,21 @@ it('authenticated users can create categories', function () {
     ]);
 });
 
-it('name is required', function () {
+it('category name is required', function () {
 
-    $category = Category::factory()->raw(['name' => '']);
+    $category =Category::factory()->make();
+    $category->name = '';
+    $data = jsonData($category);
 
     Sanctum::actingAs($this->user);
 
     $this->jsonApi()
-        ->withData([
-            'type' => 'categories',
-            'attributes' => $category,
-        ])
+        ->withData($data)
         ->post(route('api.v1.categories.store'))
         ->assertUnprocessable() // 422
         ->assertSee('data\/attributes\/name');
 
-    $this->assertDatabaseMissing('categories', $category);
+    $this->assertDatabaseMissing('categories', $category->toArray());
 });
 
 it('slug is required', function () {

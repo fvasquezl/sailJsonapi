@@ -104,7 +104,10 @@ function modelRelationNames(Model $model): array
 {
     $reflection = new ReflectionClass($model);
     return collect($reflection->getMethods(ReflectionMethod::IS_PUBLIC))
-        ->filter(fn($method) => $method->class === get_class($model) && $method->getNumberOfParameters() === 0 && is_a($method->invoke($model), Relation::class))
+        ->filter(fn($method) => 
+            $method->class === get_class($model) && 
+            $method->getNumberOfParameters() === 0 && 
+            is_a($method->invoke($model), Relation::class))
         ->map(fn($method) => $method->getName())
         ->values()
         ->all();
@@ -122,9 +125,10 @@ function getModelRelationships(Model $model): array
         ->mapWithKeys(function (string $relation) use ($model): array {
             $related = $model->$relation;
 
-            if ($related === null) {
+            if ($related === null || !($related instanceof Model)) {
                 return [$relation => ['data' => ['type' => '', 'id' => null]]];
             }
+
             $typeMap = property_exists($model, 'jsonApiTypes') ? $model->jsonApiTypes : [];
 
             $jsonApiType =  $typeMap[$relation] ?? Str::plural(Str::kebab(class_basename($related)));
