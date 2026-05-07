@@ -1,7 +1,8 @@
 <?php
 
-use App\Models\Article;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -17,9 +18,7 @@ use Tests\TestCase;
 |
 */
 
-pest()->extend(TestCase::class)
-    ->use(RefreshDatabase::class)
-    ->in('Feature', 'Unit');
+pest()->extend(TestCase::class)->use(RefreshDatabase::class)->in('Feature', 'Unit');
 
 /*
 |--------------------------------------------------------------------------
@@ -47,36 +46,38 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function jsonData(Article $article, $author = true, $categories = true): array
+function jsonData(Model $model): array
 {
-    $relationships = [];
-
-    if ($author) {
-        $relationships['authors'] = [
-            'data' => ['type' => 'authors', 'id' => (string) $article->user->getRouteKey()],
-        ];
-    }
-
-
-    if ($categories) {
-        $relationships['categories'] = [
-            'data' => ['type' => 'categories', 'id' => (string) $article->category->getRouteKey()],
-        ];
-    }
-    
+    $type = Str::plural(Str::kebab(class_basename($model)));
+    $exclude = ['id', 'created_at', 'updated_at', 'deleted_at'];
+    $attributes = getModelAttributes($model, $exclude);
+    $relationships = getModelRelationships($model);
 
     $data = [
-        'type' => 'articles',
-        'attributes' => [
-            'title' => $article->title,
-            'slug' => $article->slug,
-            'content' => $article->content,
-        ],
+        'type' => $type,
+        'attributes' => $attributes,
         'relationships' => $relationships,
     ];
 
-    if ($article->exists) {
-        $data['id'] = (string) $article->getRouteKey();
+    if ($model->exists) {
+        $data['id'] = (string) $model->getRouteKey();
+    }
+
+    return $data;
+}
+
+function jsonDataModel(Model $model): array
+{
+    $type = Str::plural(Str::kebab(class_basename($model)));
+    $exclude = ['id', 'created_at', 'updated_at', 'deleted_at'];
+    $attributes = collect($model->getAttributes())->except($exclude)->toArray();
+    $data = [
+        'type' => $type,
+        'attributes' => $attributes,
+    ];
+
+    if ($model->exists) {
+        $data['id'] = (string) $model->getRouteKey();
     }
 
     return $data;
@@ -86,9 +87,7 @@ function userWithPermission(string $permission, ?User $user = null): User
 {
     $user ??= User::factory()->create();
 
-    $user->givePermissionTo(
-        Permission::findOrCreate($permission, 'web')
-    );
+    $user->givePermissionTo(Permission::findOrCreate($permission, 'web'));
 
     return $user;
 }
@@ -99,4 +98,54 @@ function superAdminUser(): User
     $user->assignRole('super-admin');
 
     return $user;
+}
+
+function modelRelationNames(Model $model): array
+{
+    $reflection = new ReflectionClass($model);
+    return collect($reflection->getMethods(ReflectionMethod::IS_PUBLIC))
+        ->filter(fn($method) => $method->class === get_class($model) && $method->getNumberOfParameters() === 0 && is_a($method->invoke($model), Relation::class))
+        ->map(fn($method) => $method->getName())
+        ->values()
+        ->all();
+}
+
+function getModelRelationships(Model $model): array
+{
+    $relations = modelRelationNames($model);
+
+    if (empty($relations)) {
+        return [];
+    }
+
+    return collect($relations)
+        ->mapWithKeys(function (string $relation) use ($model): array {
+            $related = $model->$relation;
+
+            if ($related === null) {
+                return [$relation => ['data' => ['type' => '', 'id' => null]]];
+            }
+            $typeMap = property_exists($model, 'jsonApiTypes') ? $model->jsonApiTypes : [];
+
+            $jsonApiType =  $typeMap[$relation] ?? Str::plural(Str::kebab(class_basename($related)));
+
+            return [
+                $jsonApiType => [
+                    'data' => [
+                        'type' => $jsonApiType,
+                        'id' => (string) $related->getRouteKey(),
+                    ],
+                ],
+            ];
+        })
+        ->filter(fn($rel) => $rel['data']['id'] !== null)
+        ->toArray();
+}
+
+function getModelAttributes(Model $model, array $exclude = []): array
+{
+    return collect($model->getAttributes())
+        ->except($exclude)
+        ->filter(fn($value, $key) => !str_ends_with($key, '_id'))
+        ->toArray();
 }

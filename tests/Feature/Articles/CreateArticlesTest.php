@@ -43,7 +43,7 @@ it('returns json errors when no data is sent', function () {
 
 it('authenticated users can create articles', function () {
     $data = jsonData(
-        $article = Article::factory()->make(),
+        $article = Article::factory()->make()
     );
 
     Sanctum::actingAs(userWithPermission('articles:store', $article->user));
@@ -68,7 +68,7 @@ it('authenticated users can create articles', function () {
 
 it('authenticated users cannot create articles without permissions', function () {
     $data = jsonData(
-        $article = Article::factory()->make(),
+        $article = Article::factory()->make()
     );
 
     Sanctum::actingAs($article->user);
@@ -114,10 +114,11 @@ it('can have protection to mass assignment', function () {
 });
 
 it('authors is required', function () {
+    
     $data = jsonData(
         $article = Article::factory()->make(),
-        author: null,
     );
+    unset($data['relationships']['authors']);
 
     Sanctum::actingAs($article->user);
 
@@ -134,8 +135,8 @@ it('authors is required', function () {
 it('categories is required', function () {
     $data = jsonData(
         $article = Article::factory()->make(),
-        categories: null,
     );
+    unset($data['relationships']['categories']);
 
     Sanctum::actingAs(userWithPermission('articles:store', $article->user));
 

@@ -38,6 +38,8 @@ class Article extends Model
         return 'slug';
     }
 
+     public array $jsonApiTypes = ['user' => 'authors']; 
+
     /**
      * @return BelongsTo<Category, $this>
      */
