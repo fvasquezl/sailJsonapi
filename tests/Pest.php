@@ -56,8 +56,11 @@ function jsonData(Model $model): array
     $data = [
         'type' => $type,
         'attributes' => $attributes,
-        'relationships' => $relationships,
     ];
+    
+    if ($relationships){
+        $data['relationships'] = $relationships;
+    }
 
     if ($model->exists) {
         $data['id'] = (string) $model->getRouteKey();

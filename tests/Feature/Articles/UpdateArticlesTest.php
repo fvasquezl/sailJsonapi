@@ -15,16 +15,12 @@ beforeEach(function () {
 it('guest users cannot update articles', function () {
     $article = Article::factory()->create();
 
+    $data = jsonData(
+        Article::factory()->make(['id' => $article->getRouteKey()])
+    );
+
     $this->jsonApi()
-        ->withData([
-            'type' => 'articles',
-            'id' => $article->getRouteKey(),
-            'attributes' => [
-                'title' => 'Title false',
-                'slug' => 'slug-false',
-                'content' => 'Content false',
-            ],
-        ])
+        ->withData($data)
         ->patch(route('api.v1.articles.update', $article))
         ->assertUnauthorized(); // 401
 });
