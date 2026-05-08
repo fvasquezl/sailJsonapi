@@ -36,6 +36,7 @@ class Server extends BaseServer
             Articles\ArticleSchema::class,
             Categories\CategorySchema::class,
             Authors\AuthorSchema::class,
+            Roles\RoleSchema::class,
         ];
     }
 }

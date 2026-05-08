@@ -25,6 +25,9 @@ Route::name('api.v1.')->group(function () {
         ->middleware('auth:sanctum');
 });
 
+
+
+
 JsonApiRoute::server('v1')
     ->name('api.v1.')
     ->resources(function ($server) {
@@ -59,4 +62,7 @@ JsonApiRoute::server('v1')
                 $server->hasMany('articles')->except('update', 'attach', 'detach');
             });
 
+        //Roles && permissions
+        $server->resource('roles', JsonApiController::class)
+            ->middleware(['*' => 'auth:sanctum']);
     });

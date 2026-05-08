@@ -6,6 +6,35 @@
 
 ## Gotchas críticos
 
+### Spatie guard_name en contexto API con Sanctum
+`Sanctum::actingAs($user)` llama internamente `Auth::shouldUse('sanctum')` → `setDefaultDriver('sanctum')` → sobreescribe `config('auth.defaults.guard')` a `sanctum` **en runtime**. Spatie lee ese config al crear roles/permisos y los crea con `guard_name = 'sanctum'` aunque `config/auth.php` diga `web`.
+
+**Fix**: Crear `app/Models/Role.php` extendiendo Spatie con `protected string $guard_name = 'web'`. Spatie lee esta propiedad via reflexión ANTES de leer el config — siempre gana.
+```php
+// app/Models/Role.php
+class Role extends \Spatie\Permission\Models\Role {
+    protected string $guard_name = 'web';
+}
+```
+Registrar en `config/permission.php`: `'role' => \App\Models\Role::class`
+
+### Sanctum guard vs Spatie guard_name — capas independientes
+- **Sanctum** (`auth:sanctum`) = Autenticación. ¿Quién eres? Verifica token o cookie.
+- **Spatie `guard_name`** = Namespace de permisos. No tiene relación con cómo se autenticó el usuario.
+- **Guard `api`** = Obsoleto (tokens simples en columna `api_token`). Este proyecto no lo usa — solo `web` en `config/auth.php`.
+- En este proyecto, roles y permisos **siempre** bajo `guard_name = 'web'`, sin importar si el cliente es SPA o mobile.
+
+### jsonData() no funciona con modelos de Spatie
+El helper `jsonData()` de `tests/Pest.php` crashea con "Attempt to read property 'name' on null" si se le pasa `new Role(...)` o `new Permission(...)`. Usa reflexión que falla en modelos Spatie sin persistir. Construir payload manualmente:
+```php
+['type' => 'roles', 'attributes' => ['name' => 'editor']]
+```
+
+### RoleRequest — claves de validación JSON:API
+En `ResourceRequest::rules()`, las claves son el nombre del atributo SOLO (`'name'`), NO `'data.attributes.name'`. Usar el prefijo da pointer `/data` en lugar de `/data/attributes/name`.
+
+`dataForCreate()` solo afecta la validación, NO la creación del modelo. El modelo se crea con `$request->validated()`.
+
 ### UUID en sessions
 El modelo `User` usa `HasUuids`. La migración de `sessions` **debe** usar `foreignUuid('user_id')`, no `foreignId`. Si se usa `foreignId` (bigint), el login falla silenciosamente — MySQL rechaza el INSERT del UUID pero Laravel no lanza excepción.
 
