@@ -2,21 +2,19 @@
 
 namespace App\JsonApi\V1\Roles;
 
-use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use LaravelJsonApi\Core\Resources\JsonApiResource;
+use Spatie\Permission\Models\Role;
 
 /**
  * @property Role $resource
  */
 class RoleResource extends JsonApiResource
 {
-
     /**
      * Get the resource's attributes.
      *
-     * @param Request|null $request
-     * @return iterable
+     * @param  Request|null  $request
      */
     public function attributes($request): iterable
     {
@@ -30,14 +28,12 @@ class RoleResource extends JsonApiResource
     /**
      * Get the resource's relationships.
      *
-     * @param Request|null $request
-     * @return iterable
+     * @param  Request|null  $request
      */
     public function relationships($request): iterable
     {
         return [
-            // @TODO
+            $this->relation('permissions'),
         ];
     }
-
 }

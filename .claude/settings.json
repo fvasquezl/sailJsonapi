@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm /home/fvasquez/.claude/projects/-home-fvasquez-Code-Sail-jsonapi/memory/project_super_admin_plan.md)"
+    ]
+  }
+}

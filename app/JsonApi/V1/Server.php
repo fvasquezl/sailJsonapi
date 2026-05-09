@@ -21,6 +21,7 @@ class Server extends BaseServer
 
     /**
      * Disable authorization for this server.
+     * Siretorna true, el paquete activa el Authorizer por defecto para * cualquier schema que NO tenga un Authorizer custom. Authors no * * tiene AuthorAuthorizer
      */
     public function authorizable(): bool
     {

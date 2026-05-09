@@ -378,22 +378,56 @@ function userWithPermission(string $permission, ?User $user = null): User
 
 ## `jsonData()` helper for JSON:API payloads
 
-Defined in `tests/Pest.php`. Generates the `data` block:
+Defined in `tests/Pest.php`. Generic over any `Model` — derives `type`, `attributes`, and `relationships` via reflection:
 
 ```php
-function jsonData(Article $article, ?User $user = null, ?Category $category = null): array
-{
-    // Returns: ['type' => 'articles', 'attributes' => [...], 'relationships' => [...]]
-}
+function jsonData(Model $model): array
+// Returns: ['type' => 'articles', 'attributes' => [...], 'relationships' => [...], 'id' => '...']
 ```
+
+Internal rules:
+- `type` = `Str::plural(Str::kebab(class_basename($model)))`.
+- `attributes` = `$model->getAttributes()` minus `id`, `*_at`, and `*_id` (FKs).
+- `relationships` = reflection over public no-arg methods returning `Relation`. Only **loaded** relations (`$model->setRelation(...)` or eager-loaded) appear in the payload. Each gets a JSON:API `type` derived from the related model's class basename, overridable per-model with `public array $jsonApiTypes = ['user' => 'authors']`.
+- `id` is included **only if `$model->exists === true`**. Models built with `->make()` produce no `id` in the payload.
+- The `relationships` key is omitted entirely when the array is empty (so requests for resources with no relations don't include a stray empty block).
 
 ### Usage by request type
 
 | Request | Pattern |
 |---|---|
-| **POST (store)** | `jsonData(Article::factory()->make(), $user, $category)` — fits naturally |
-| **PATCH (full update)** | Add explicit `?string $id` param OR detect via `$article->exists`. The helper does NOT generate `data.id`, which JSON:API requires for PATCH |
-| **PATCH (single attribute)** | Hand-roll the payload — the helper always sends all 3 attributes, defeating the partial-update test |
+| **POST (store)** | `$article = Article::factory()->make(); $article->setRelation('user', $user); $article->setRelation('category', $category); jsonData($article);` |
+| **PATCH (replace-all)** | Use a **persisted** model (`->create()`), mutate attributes in memory (`$article->title = '...'`), then `jsonData($article)`. The `id` comes in automatically because `exists === true`. |
+| **PATCH (single attribute)** | Hand-roll the payload — `jsonData()` always sends all attributes, defeating the partial-update test. See antipattern below. |
+
+### Antipattern — passing JSON:API structure to `factory()->make()`
+
+```php
+// WRONG — fails with 400 "id is required" + "attributes is not a supported attribute"
+$data = jsonData(
+    Article::factory()->make([
+        'id' => $article->getRouteKey(),
+        'attributes' => $attributes,
+    ])
+);
+```
+
+`make($overrides)` interprets overrides as **model columns**, not JSON:API structure. Two silent failures:
+1. `attributes` becomes a literal model attribute and gets re-emitted inside `data.attributes` → 400.
+2. `id` override is dropped by the `*_id` exclusion in `getModelAttributes`, and since the model is non-persisted (`exists === false`), `jsonData()` skips the id injection → 400.
+
+For PATCH partial, hand-roll instead:
+
+```php
+$this->jsonApi()
+    ->withData([
+        'type' => 'articles',
+        'id' => (string) $article->getRouteKey(),
+        'attributes' => $attributes,
+    ])
+    ->patch(route('api.v1.articles.update', $article))
+    ->assertOk();
+```
 
 ### Common bug — `$article['attributes'] = $value` does nothing
 

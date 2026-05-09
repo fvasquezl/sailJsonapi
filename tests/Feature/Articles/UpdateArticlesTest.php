@@ -139,6 +139,7 @@ it('can replace the author', function () {
     );
 
     $this->jsonApi()
+    
         ->withData([
             'type' => 'authors',
             'id' => $author->getRouteKey(),
